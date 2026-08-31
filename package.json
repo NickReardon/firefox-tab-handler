@@ -1,0 +1,15 @@
+{
+  "name": "firefox-tab-organizer",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "test": "node --test",
+    "lint": "web-ext lint --source-dir src",
+    "build": "web-ext build --source-dir src --artifacts-dir web-ext-artifacts --overwrite-dest",
+    "run": "web-ext run --source-dir src"
+  },
+  "devDependencies": {
+    "web-ext": "^10.6.0"
+  }
+}
