@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tab organization preview</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Organization preview</h1>
+      <p id="status" role="status">Loading preview...</p>
+
+      <div id="preview" hidden>
+        <p><strong>Destination window:</strong> <span id="destination"></span></p>
+        <p><strong>Active tab to restore:</strong> <span id="active-tab"></span></p>
+
+        <section aria-labelledby="preserved-heading">
+          <h2 id="preserved-heading">Preserved groups</h2>
+          <ul id="preserved-groups"></ul>
+        </section>
+
+        <section aria-labelledby="moves-heading">
+          <h2 id="moves-heading">Loose tabs</h2>
+          <ul id="loose-moves"></ul>
+        </section>
+
+        <section aria-labelledby="new-groups-heading">
+          <h2 id="new-groups-heading">New groups</h2>
+          <ul id="new-groups"></ul>
+        </section>
+
+        <section aria-labelledby="warnings-heading">
+          <h2 id="warnings-heading">Warnings</h2>
+          <ul id="warnings"></ul>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

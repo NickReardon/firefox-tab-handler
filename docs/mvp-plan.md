@@ -54,6 +54,14 @@ Planner invariants:
 - Track the active tab for restoration.
 - Leave unmatched tabs ungrouped.
 
+Status: accepted on 2026-08-31.
+
+- `npm test` passes nine focused planner, preview, routing, and API-spike checks.
+- Manual temporary-add-on validation confirmed the destination and active tab, move versus keep classification, pinned state, preserved group metadata, and warning output.
+- Opening the preview did not mutate tabs, groups, windows, pinned state, or the active tab.
+- Runtime messaging exposes only the read-only preview; the Milestone 1 mutation helpers remain test-only.
+- `web-ext lint` reports zero errors and one Android-only minimum-version warning; a clean desktop build succeeds.
+
 ## Milestone 3: apply and undo
 
 Execute an approved plan in this order:

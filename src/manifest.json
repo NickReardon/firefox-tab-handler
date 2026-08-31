@@ -17,5 +17,8 @@
     "scripts": ["background.js"],
     "type": "module"
   },
+  "action": {
+    "default_popup": "popup.html"
+  },
   "permissions": ["tabs", "tabGroups"]
 }

@@ -1,0 +1,35 @@
+:root {
+  color-scheme: light dark;
+  font: menu;
+}
+
+body {
+  box-sizing: border-box;
+  margin: 0;
+  min-width: 22rem;
+  max-width: 30rem;
+  padding: 1rem;
+}
+
+h1 {
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+h2 {
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+
+ul {
+  margin-top: 0;
+  padding-left: 1.25rem;
+}
+
+li {
+  overflow-wrap: anywhere;
+}
+
+#status[role="alert"] {
+  color: #c33;
+}

@@ -1,7 +1,16 @@
-import { handleSpikeMessage } from "./spike.js";
+import { planOrganization } from "./planner.js";
+import { snapshotBrowser } from "./spike.js";
+
+export function handleBackgroundMessage(api, message) {
+  if (message?.type !== "planner:preview") {
+    return undefined;
+  }
+
+  return snapshotBrowser(api).then((snapshot) => planOrganization(snapshot));
+}
 
 browser.runtime.onMessage.addListener((message) =>
-  handleSpikeMessage(browser, message),
+  handleBackgroundMessage(browser, message),
 );
 
-console.info("Firefox Tab Organizer API spike ready.");
+console.info("Firefox Tab Organizer preview ready.");
