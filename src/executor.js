@@ -10,7 +10,8 @@ export async function applyOrganization(api, snapshot, plan) {
     destinationWindowId: plan.destinationWindowId,
     sourceWindowCount: movedSourceWindowIds(plan).length,
     preservedGroupCount: plan.preservedGroups.filter((group) => group.requiresMove).length,
-    looseTabCount: orderedMoves(snapshot, plan).length,
+    movedTabCount: movedTabCount(plan),
+    ungroupedTabCount: plan.looseTabMoves.filter((move) => !move.pinned).length,
     newGroupCount: plan.newGroups.filter((group) => group.targetGroupId === undefined).length,
     reusedGroupCount: plan.newGroups.filter((group) => group.targetGroupId !== undefined).length,
   });
@@ -111,6 +112,22 @@ export async function applyOrganization(api, snapshot, plan) {
     });
   }
 
+  const hasGroups = plan.preservedGroups.length > 0 || plan.newGroups.length > 0;
+
+  for (const move of plan.looseTabMoves.filter(
+    (item) => !item.pinned && (item.requiresMove || hasGroups),
+  )) {
+    await api.tabs.move(move.tabId, {
+      windowId: plan.destinationWindowId,
+      index: -1,
+    });
+    log("apply:loose-tab-placed", {
+      tabId: move.tabId,
+      sourceWindowId: move.sourceWindowId,
+      destinationWindowId: plan.destinationWindowId,
+    });
+  }
+
   if (plan.activeTabId !== null) {
     await api.tabs.update(plan.activeTabId, { active: true });
     log("apply:active-tab-restored", { tabId: plan.activeTabId });
@@ -125,7 +142,7 @@ export async function applyOrganization(api, snapshot, plan) {
 
   const result = {
     movedGroups: plan.preservedGroups.filter((item) => item.requiresMove).length,
-    movedTabs: moves.length,
+    movedTabs: movedTabCount(plan),
     createdGroups: plan.newGroups.filter((group) => group.targetGroupId === undefined).length,
     closedWindows: sourceWindowIds.length,
   };
@@ -438,7 +455,10 @@ function movedSourceWindowIds(plan) {
 
 function orderedMoves(snapshot, plan) {
   const moves = new Map(
-    [...plan.looseTabMoves, ...plan.newGroups.flatMap((group) => group.tabMoves)]
+    [
+      ...plan.looseTabMoves.filter((move) => move.pinned),
+      ...plan.newGroups.flatMap((group) => group.tabMoves),
+    ]
       .filter((move) => move.requiresMove)
       .map((move) => [move.tabId, move]),
   );
@@ -464,6 +484,13 @@ function orderedMoves(snapshot, plan) {
     .filter(Boolean);
 }
 
+function movedTabCount(plan) {
+  return [
+    ...plan.looseTabMoves,
+    ...plan.newGroups.flatMap((group) => group.tabMoves),
+  ].filter((move) => move.requiresMove).length;
+}
+
 async function validatePreApply(api, snapshot, destinationWindowId) {
   const destination = await api.windows.get(destinationWindowId);
 
@@ -484,6 +511,7 @@ async function validatePreApply(api, snapshot, destinationWindowId) {
       throw new Error(`Tab ${expected.id} changed after preview. Refresh the plan.`);
     }
   }
+
 }
 
 async function validateApplied(api, snapshot, plan, affectedGroups, anchors) {
@@ -502,6 +530,24 @@ async function validateApplied(api, snapshot, plan, affectedGroups, anchors) {
     }
     if (expected.pinned && live.groupId !== NO_GROUP) {
       throw new Error(`Pinned tab ${expected.id} was grouped.`);
+    }
+  }
+
+  const lastGroupedIndex = Math.max(
+    -1,
+    ...[...destinationTabs.values()]
+      .filter((tab) => tab.groupId !== NO_GROUP)
+      .map((tab) => tab.index),
+  );
+
+  for (const move of plan.looseTabMoves.filter((item) => !item.pinned)) {
+    const live = destinationTabs.get(move.tabId);
+
+    if (live.groupId !== NO_GROUP) {
+      throw new Error(`Loose tab ${move.tabId} was grouped.`);
+    }
+    if (live.index < lastGroupedIndex) {
+      throw new Error(`Loose tab ${move.tabId} was not placed after the groups.`);
     }
   }
 

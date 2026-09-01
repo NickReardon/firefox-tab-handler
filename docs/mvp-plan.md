@@ -135,6 +135,15 @@ Strip query strings and fragments by default. Offer an explicit include-full-URL
 
 This export performs no network request. A user may manually paste it into an AI tool and import a reviewed generated rule config afterward.
 
+Status: accepted on 2026-09-01.
+
+- `pnpm test` passes 19 focused portability, privacy, rule, planning, apply, undo, logging, routing, preview, and API-spike checks.
+- Rule export produces version 1 JSON; import rejects malformed or unknown fields and previews added, changed, and removed rules before replacement.
+- Manual temporary-add-on validation produced rule and sanitized tab-inventory downloads suitable for the external AI workflow.
+- Inventory export includes group name, title, hostname, sanitized URL, pinned state, and container identity; query strings and fragments require the explicit full-URL toggle.
+- Apply places pinned tabs first, groups next, and unmatched unpinned tabs last while preserving their window and tab order.
+- `web-ext lint` reports zero errors and one Android-only minimum-version warning; a clean desktop build succeeds.
+
 ## Definition of done
 
 - Preview and apply safe cross-window consolidation.

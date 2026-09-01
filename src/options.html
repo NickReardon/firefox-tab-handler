@@ -14,8 +14,20 @@
       <div class="actions">
         <button id="add-rule" type="button">Add rule</button>
         <button id="save-rules" type="button">Save rules</button>
+        <button id="export-rules" type="button">Export rules</button>
       </div>
       <p id="status" role="status"></p>
+
+      <section aria-labelledby="import-heading">
+        <h2 id="import-heading">Import rules</h2>
+        <input id="import-file" type="file" accept="application/json,.json" />
+        <div id="import-preview" hidden>
+          <h3>Added</h3><ul id="import-added"></ul>
+          <h3>Changed</h3><ul id="import-changed"></ul>
+          <h3>Removed</h3><ul id="import-removed"></ul>
+          <button id="apply-import" type="button" disabled>Replace saved rules</button>
+        </div>
+      </section>
     </main>
 
     <template id="rule-template">

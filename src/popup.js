@@ -1,3 +1,5 @@
+import { downloadJson } from "./portable.js";
+
 export function itemLabel(item) {
   if (typeof item !== "object" || item === null) {
     return String(item);
@@ -69,6 +71,8 @@ async function loadPreview() {
   const undoButton = document.querySelector("#undo");
   const debugLogging = document.querySelector("#debug-logging");
   const result = document.querySelector("#result");
+  const includeFullUrls = document.querySelector("#include-full-urls");
+  const exportInventory = document.querySelector("#export-inventory");
 
   document.querySelector("#open-options").addEventListener("click", () =>
     browser.runtime.openOptionsPage(),
@@ -112,6 +116,25 @@ async function loadPreview() {
         result.textContent = `Could not update logging: ${error.message}`;
       } finally {
         debugLogging.disabled = false;
+      }
+    });
+
+    exportInventory.addEventListener("click", async () => {
+      exportInventory.disabled = true;
+
+      try {
+        const inventory = await browser.runtime.sendMessage({
+          type: "inventory:get",
+          includeFullUrls: includeFullUrls.checked,
+        });
+        downloadJson("firefox-tab-organizer-tabs.json", inventory);
+        result.setAttribute("role", "status");
+        result.textContent = "Tab inventory exported.";
+      } catch (error) {
+        result.setAttribute("role", "alert");
+        result.textContent = `Could not export inventory: ${error.message}`;
+      } finally {
+        exportInventory.disabled = false;
       }
     });
 

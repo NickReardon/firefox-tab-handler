@@ -73,7 +73,12 @@ test("applies and validates a plan before closing source windows", async () => {
       },
       move: async (tabId, { windowId, index }) => {
         moveCalls.push({ tabId, windowId, index });
-        tabs.set(tabId, { ...tabs.get(tabId), windowId });
+        const destinationIndex = index === -1
+          ? Math.max(-1, ...[...tabs.values()]
+            .filter((tab) => tab.windowId === windowId)
+            .map((tab) => tab.index)) + 1
+          : index;
+        tabs.set(tabId, { ...tabs.get(tabId), windowId, index: destinationIndex });
         return tabs.get(tabId);
       },
       group: async ({ tabIds, groupId = 40 }) => {
@@ -147,6 +152,7 @@ test("applies and validates a plan before closing source windows", async () => {
     { tabId: 23, windowId: 1, index: 1 },
     { tabId: 22, windowId: 1, index: 6 },
     { tabId: 24, windowId: 1, index: 7 },
+    { tabId: 11, windowId: 1, index: -1 },
   ]);
 });
 

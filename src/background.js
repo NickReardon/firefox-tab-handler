@@ -9,6 +9,7 @@ import {
   setDebugLogging,
 } from "./logger.js";
 import { planOrganization } from "./planner.js";
+import { buildTabInventory } from "./portable.js";
 import { getRules } from "./rules.js";
 import { snapshotBrowser } from "./spike.js";
 
@@ -28,6 +29,13 @@ export function handleBackgroundMessage(api, message) {
       return getDebugLogging(api);
     case "logging:set":
       return setDebugLogging(api, message.enabled);
+    case "inventory:get":
+      return snapshotBrowser(api).then((snapshot) =>
+        buildTabInventory(snapshot, {
+          includeFullUrls: message.includeFullUrls,
+          windowIds: message.windowIds,
+        }),
+      );
     default:
       return undefined;
   }

@@ -13,6 +13,14 @@ the first match wins. Each rule assigns loose, unpinned tabs to a native group
 by exact hostname, URL text, or title text. Existing groups remain intact.
 If the destination already has a group with the exact rule name, matching tabs
 and other exact-name groups join it, retaining its color and collapsed state.
+After Apply, pinned tabs remain first, groups follow, and unmatched unpinned
+tabs are placed last in their preserved window and tab order.
+
+Rule configurations can be exported and imported from the options page. Import
+shows added, changed, and removed rules before replacing saved rules.
+
+The popup exports a local tab inventory. Query strings and fragments are
+removed by default; including them requires the explicit full-URL checkbox.
 
 ## API spike
 

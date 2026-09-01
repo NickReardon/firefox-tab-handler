@@ -1,8 +1,15 @@
 import { getRules, setRules } from "./rules.js";
+import {
+  createRuleConfig,
+  downloadJson,
+  parseRuleConfig,
+  previewRuleReplacement,
+} from "./portable.js";
 
 const list = document.querySelector("#rules");
 const status = document.querySelector("#status");
 let rules = [];
+let pendingRules = null;
 
 function values(textarea) {
   return textarea.value.split("\n").map((value) => value.trim()).filter(Boolean);
@@ -74,6 +81,71 @@ document.querySelector("#save-rules").addEventListener("click", async () => {
   } catch (error) {
     status.setAttribute("role", "alert");
     status.textContent = `Could not save rules: ${error.message}`;
+  }
+});
+
+document.querySelector("#export-rules").addEventListener("click", () => {
+  try {
+    downloadJson("firefox-tab-organizer-rules.json", createRuleConfig(readRows()));
+    status.setAttribute("role", "status");
+    status.textContent = "Rules exported.";
+  } catch (error) {
+    status.setAttribute("role", "alert");
+    status.textContent = `Could not export rules: ${error.message}`;
+  }
+});
+
+document.querySelector("#import-file").addEventListener("change", async (event) => {
+  const preview = document.querySelector("#import-preview");
+  const apply = document.querySelector("#apply-import");
+  pendingRules = null;
+  apply.disabled = true;
+  preview.hidden = true;
+
+  try {
+    const file = event.target.files[0];
+    if (!file) {
+      return;
+    }
+    const config = parseRuleConfig(await file.text());
+    const changes = previewRuleReplacement(rules, config.rules);
+
+    for (const [key, items] of Object.entries(changes)) {
+      const list = document.querySelector(`#import-${key}`);
+      list.replaceChildren();
+      for (const rule of items.length ? items : [{ id: "None", name: "" }]) {
+        const item = document.createElement("li");
+        item.textContent = rule.name ? `${rule.name} (${rule.id})` : rule.id;
+        list.append(item);
+      }
+    }
+
+    pendingRules = config.rules;
+    apply.disabled = false;
+    preview.hidden = false;
+    status.setAttribute("role", "status");
+    status.textContent = "Import preview ready. Saved rules are unchanged.";
+  } catch (error) {
+    status.setAttribute("role", "alert");
+    status.textContent = `Could not import rules: ${error.message}`;
+  }
+});
+
+document.querySelector("#apply-import").addEventListener("click", async () => {
+  if (!pendingRules) {
+    return;
+  }
+
+  try {
+    rules = await setRules(browser, pendingRules);
+    pendingRules = null;
+    document.querySelector("#apply-import").disabled = true;
+    render();
+    status.setAttribute("role", "status");
+    status.textContent = "Imported rules replaced the saved rules.";
+  } catch (error) {
+    status.setAttribute("role", "alert");
+    status.textContent = `Could not replace rules: ${error.message}`;
   }
 });
 

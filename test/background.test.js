@@ -71,6 +71,21 @@ test("builds a preview without exposing mutation messages", async () => {
     true,
   );
   assert.equal(await handleBackgroundMessage(api, { type: "logging:get" }), true);
+  tab.title = "Inventory tab";
+  tab.url = "https://example.com/path?token=secret#section";
+  tab.cookieStoreId = "firefox-default";
+  const inventory = await handleBackgroundMessage(api, {
+    type: "inventory:get",
+    includeFullUrls: false,
+  });
+  assert.deepEqual(inventory.windows[0].tabs[0], {
+    groupName: null,
+    title: "Inventory tab",
+    hostname: "example.com",
+    url: "https://example.com/path",
+    pinned: false,
+    cookieStoreId: "firefox-default",
+  });
   assert.equal(
     handleBackgroundMessage(api, { type: "spike:move-loose-tab" }),
     undefined,
