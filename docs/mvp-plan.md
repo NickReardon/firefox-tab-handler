@@ -69,7 +69,7 @@ Execute an approved plan in this order:
 1. Keep an anchor tab in each source window.
 2. Move preserved groups.
 3. Move loose tabs.
-4. Create groups for rule-matched loose tabs.
+4. Create or reuse groups for rule-matched loose tabs.
 5. Validate the resulting layout.
 6. Close empty source windows only after validation.
 7. Store the pre-apply snapshot for one best-effort undo.
@@ -88,9 +88,19 @@ Status: accepted on 2026-09-01.
 
 Store ordered rules in `storage.local`. A rule can match hostname, URL substring, or title keyword, then assign a native group name and color. First matching rule wins.
 
-Rules affect only ungrouped, unpinned tabs. Existing groups always win in safe mode.
+Rules affect only ungrouped, unpinned tabs. Existing groups remain intact unless
+multiple groups have the exact rule name, in which case they merge into the
+destination group or first matching source group.
 
 The options page supports adding, editing, deleting, and reordering rules.
+
+Status: accepted on 2026-09-01.
+
+- `pnpm test` passes 16 focused rule storage, matching, planning, apply, undo, logging, routing, preview, and API-spike checks.
+- Manual temporary-add-on validation confirmed adding, editing, deleting, reordering, and persisting ordered rules.
+- Preview and Apply confirmed first-match-wins behavior for loose, unpinned tabs.
+- Exact-name existing groups merge into one target while preserving the target color and collapsed state; undo recreates consumed groups where possible.
+- `web-ext lint` reports zero errors and one Android-only minimum-version warning; a clean desktop build succeeds.
 
 ## Milestone 5: portable configuration and tab inventory
 

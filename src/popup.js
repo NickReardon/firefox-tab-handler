@@ -4,8 +4,8 @@ export function itemLabel(item) {
   }
 
   const title = item.message ?? item.title ?? item.name ?? item.groupTitle;
-  const count =
-    item.count ?? item.tabCount ?? item.tabIds?.length ?? item.tabMoves?.length;
+  const count = item.count ?? item.tabCount ?? item.tabIds?.length ??
+    (item.tabMoves ? item.tabMoves.length + (item.mergeTabCount ?? 0) : undefined);
   const parts = [];
 
   if (item.requiresMove === true) {
@@ -35,6 +35,12 @@ export function itemLabel(item) {
   if (item.color) {
     parts.push(`Color ${item.color}`);
   }
+  if (item.targetGroupId !== undefined) {
+    parts.push(`Join group ${item.targetGroupId}`);
+  }
+  if (item.mergeGroupIds?.length) {
+    parts.push(`Merge groups ${item.mergeGroupIds.join(", ")}`);
+  }
   if (typeof item.collapsed === "boolean") {
     parts.push(item.collapsed ? "Collapsed" : "Expanded");
   }
@@ -63,6 +69,10 @@ async function loadPreview() {
   const undoButton = document.querySelector("#undo");
   const debugLogging = document.querySelector("#debug-logging");
   const result = document.querySelector("#result");
+
+  document.querySelector("#open-options").addEventListener("click", () =>
+    browser.runtime.openOptionsPage(),
+  );
 
   try {
     const plan = await browser.runtime.sendMessage({ type: "planner:preview" });

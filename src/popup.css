@@ -43,3 +43,25 @@ li {
   display: block;
   margin-bottom: 0.75rem;
 }
+
+body.options {
+  max-width: 60rem;
+  margin: auto;
+}
+
+.rule {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid currentColor;
+}
+
+.rule label {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.rule textarea {
+  min-height: 3rem;
+  resize: vertical;
+}

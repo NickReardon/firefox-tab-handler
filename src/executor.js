@@ -11,7 +11,8 @@ export async function applyOrganization(api, snapshot, plan) {
     sourceWindowCount: movedSourceWindowIds(plan).length,
     preservedGroupCount: plan.preservedGroups.filter((group) => group.requiresMove).length,
     looseTabCount: orderedMoves(snapshot, plan).length,
-    newGroupCount: plan.newGroups.length,
+    newGroupCount: plan.newGroups.filter((group) => group.targetGroupId === undefined).length,
+    reusedGroupCount: plan.newGroups.filter((group) => group.targetGroupId !== undefined).length,
   });
   await validatePreApply(api, snapshot, plan.destinationWindowId);
   log("apply:preflight-complete");
@@ -78,22 +79,35 @@ export async function applyOrganization(api, snapshot, plan) {
     });
   }
 
-  const createdGroups = [];
+  const affectedGroups = [];
 
   for (const group of plan.newGroups) {
+    const mergeGroupIds = new Set(group.mergeGroupIds ?? []);
+    const tabIds = [
+      ...group.tabMoves.map((move) => move.tabId),
+      ...plan.preservedGroups
+        .filter((candidate) => mergeGroupIds.has(candidate.id))
+        .flatMap((candidate) => candidate.tabIds),
+    ];
     const groupId = await api.tabs.group({
-      tabIds: group.tabMoves.map((move) => move.tabId),
-      createProperties: { windowId: plan.destinationWindowId },
+      tabIds,
+      ...(group.targetGroupId === undefined
+        ? { createProperties: { windowId: plan.destinationWindowId } }
+        : { groupId: group.targetGroupId }),
     });
-    await api.tabGroups.update(groupId, {
-      title: group.title,
-      color: group.color,
-    });
-    createdGroups.push({ groupId, tabIds: group.tabMoves.map((move) => move.tabId) });
-    log("apply:group-created", {
+
+    if (group.targetGroupId === undefined) {
+      await api.tabGroups.update(groupId, {
+        title: group.title,
+        color: group.color,
+      });
+    }
+    affectedGroups.push({ groupId, tabIds });
+    log(group.targetGroupId === undefined ? "apply:group-created" : "apply:group-joined", {
       groupId,
       ruleId: group.ruleId,
-      tabIds: group.tabMoves.map((move) => move.tabId),
+      tabIds,
+      mergedGroupIds: group.mergeGroupIds ?? [],
     });
   }
 
@@ -101,7 +115,7 @@ export async function applyOrganization(api, snapshot, plan) {
     await api.tabs.update(plan.activeTabId, { active: true });
     log("apply:active-tab-restored", { tabId: plan.activeTabId });
   }
-  await validateApplied(api, snapshot, plan, createdGroups, anchors);
+  await validateApplied(api, snapshot, plan, affectedGroups, anchors);
   log("apply:validation-complete");
 
   for (const windowId of sourceWindowIds) {
@@ -112,7 +126,7 @@ export async function applyOrganization(api, snapshot, plan) {
   const result = {
     movedGroups: plan.preservedGroups.filter((item) => item.requiresMove).length,
     movedTabs: moves.length,
-    createdGroups: createdGroups.length,
+    createdGroups: plan.newGroups.filter((group) => group.targetGroupId === undefined).length,
     closedWindows: sourceWindowIds.length,
   };
   log("apply:complete", result);
@@ -198,7 +212,53 @@ export async function undoLastOrganization(api) {
       const live = liveGroups.get(groupId);
 
       if (!live) {
-        warnings.push(`Group ${groupId} disappeared and could not be restored.`);
+        const tabIds = [];
+
+        for (const expected of original.tabs.filter((tab) => tab.groupId === groupId)) {
+          try {
+            const tab = await api.tabs.get(expected.id);
+
+            if (tab.groupId !== NO_GROUP) {
+              await api.tabs.ungroup(tab.id);
+            }
+            if (tab.windowId !== targetWindowId) {
+              await api.tabs.move(tab.id, { windowId: targetWindowId, index: -1 });
+            }
+            tabIds.push(tab.id);
+          } catch {
+            warnings.push(`Tab ${expected.id} disappeared and could not be restored.`);
+          }
+        }
+
+        if (!tabIds.length) {
+          warnings.push(`Group ${groupId} disappeared and could not be restored.`);
+          continue;
+        }
+
+        try {
+          const restoredGroupId = await api.tabs.group({
+            tabIds,
+            createProperties: { windowId: targetWindowId },
+          });
+          if (group) {
+            await api.tabGroups.update(restoredGroupId, {
+              title: group.title,
+              color: group.color,
+              collapsed: group.collapsed,
+            });
+          }
+          await removeAnchor(targetWindowId);
+          restoredGroups += 1;
+          log("undo:group-recreated", {
+            originalGroupId: groupId,
+            restoredGroupId,
+            originalWindowId: original.id,
+            restoredWindowId: targetWindowId,
+            tabIds,
+          });
+        } catch (error) {
+          warnings.push(`Group ${groupId} could not be restored: ${error.message}`);
+        }
         continue;
       }
 
@@ -426,7 +486,7 @@ async function validatePreApply(api, snapshot, destinationWindowId) {
   }
 }
 
-async function validateApplied(api, snapshot, plan, createdGroups, anchors) {
+async function validateApplied(api, snapshot, plan, affectedGroups, anchors) {
   const destinationTabs = new Map(
     (await api.tabs.query({ windowId: plan.destinationWindowId })).map((tab) => [
       tab.id,
@@ -452,7 +512,14 @@ async function validateApplied(api, snapshot, plan, createdGroups, anchors) {
     throw new Error(`Active tab ${plan.activeTabId} was not restored.`);
   }
 
+  const mergedGroupIds = new Set(
+    plan.newGroups.flatMap((group) => group.mergeGroupIds ?? []),
+  );
+
   for (const group of plan.preservedGroups) {
+    if (mergedGroupIds.has(group.id)) {
+      continue;
+    }
     const live = await api.tabGroups.get(group.id);
 
     if (
@@ -465,10 +532,10 @@ async function validateApplied(api, snapshot, plan, createdGroups, anchors) {
     }
   }
 
-  for (const group of createdGroups) {
+  for (const group of affectedGroups) {
     for (const tabId of group.tabIds) {
       if (destinationTabs.get(tabId)?.groupId !== group.groupId) {
-        throw new Error(`New group ${group.groupId} failed validation.`);
+        throw new Error(`Rule group ${group.groupId} failed validation.`);
       }
     }
   }

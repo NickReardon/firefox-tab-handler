@@ -43,6 +43,20 @@ test("builds a preview without exposing mutation messages", async () => {
 
   assert.equal(plan.destinationWindowId, 1);
   assert.equal(plan.activeTabId, 10);
+  stored.rules = [{
+    id: "tab",
+    name: "Matched",
+    color: "blue",
+    match: { hostnames: [], urlIncludes: [], titleIncludes: ["tab"] },
+  }];
+  tab.title = "Matched tab";
+  assert.deepEqual(
+    (await handleBackgroundMessage(api, { type: "planner:preview" })).newGroups
+      .map(({ ruleId }) => ruleId),
+    ["tab"],
+  );
+  delete stored.rules;
+  delete tab.title;
   assert.deepEqual(
     await handleBackgroundMessage(api, { type: "planner:apply", plan }),
     { movedGroups: 0, movedTabs: 0, createdGroups: 0, closedWindows: 0 },

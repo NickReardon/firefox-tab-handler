@@ -28,4 +28,15 @@ test("labels preview items as moves or keeps with useful tab state", () => {
     }),
     "Move - Untitled group - ID 30 - From window 2 - To window 1 - 2 tabs - Color blue - Collapsed",
   );
+  assert.equal(
+    itemLabel({
+      title: "Matched",
+      color: "red",
+      targetGroupId: 50,
+      mergeGroupIds: [30],
+      mergeTabCount: 2,
+      tabMoves: [{ tabId: 22 }],
+    }),
+    "Matched - 3 tabs - Color red - Join group 50 - Merge groups 30",
+  );
 });

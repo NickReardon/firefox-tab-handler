@@ -117,6 +117,40 @@ test("uses the first matching rule", () => {
   ]);
 });
 
+test("targets an existing destination group with the exact rule name", () => {
+  const matchingSnapshot = structuredClone(snapshot);
+  matchingSnapshot.windows[0].tabs.push({
+    id: 12,
+    windowId: 1,
+    index: 2,
+    title: "Existing target",
+    url: "about:blank",
+    groupId: 40,
+  });
+  matchingSnapshot.windows[0].groups = [
+    { id: 40, title: "Tethered", color: "green", collapsed: true },
+  ];
+  matchingSnapshot.windows[1].tabs.push({
+    id: 24,
+    windowId: 2,
+    index: 4,
+    title: "Existing source target",
+    url: "about:blank",
+    groupId: 41,
+  });
+  matchingSnapshot.windows[1].groups.push(
+    { id: 41, title: "Tethered", color: "yellow", collapsed: false },
+  );
+
+  const plan = planOrganization(matchingSnapshot, rules);
+
+  assert.equal(plan.newGroups[0].targetGroupId, 40);
+  assert.deepEqual(plan.newGroups[0].mergeGroupIds, [41]);
+  assert.equal(plan.newGroups[0].mergeTabCount, 1);
+  assert.equal(plan.newGroups[0].color, "red");
+  assert.equal(plan.newGroups[1].targetGroupId, undefined);
+});
+
 test("rejects a snapshot without an eligible focused destination", () => {
   assert.throws(
     () => planOrganization({ ...snapshot, focusedWindowId: 4 }, rules),

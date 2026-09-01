@@ -9,12 +9,15 @@ import {
   setDebugLogging,
 } from "./logger.js";
 import { planOrganization } from "./planner.js";
+import { getRules } from "./rules.js";
 import { snapshotBrowser } from "./spike.js";
 
 export function handleBackgroundMessage(api, message) {
   switch (message?.type) {
     case "planner:preview":
-      return snapshotBrowser(api).then((snapshot) => planOrganization(snapshot));
+      return Promise.all([snapshotBrowser(api), getRules(api)]).then(
+        ([snapshot, rules]) => planOrganization(snapshot, rules),
+      );
     case "planner:apply":
       return applyCurrentPlan(api, message.plan);
     case "planner:undo":
@@ -34,8 +37,11 @@ async function applyCurrentPlan(api, approvedPlan) {
   const log = await createDebugLogger(api);
 
   try {
-    const snapshot = await snapshotBrowser(api);
-    const currentPlan = planOrganization(snapshot);
+    const [snapshot, rules] = await Promise.all([
+      snapshotBrowser(api),
+      getRules(api),
+    ]);
+    const currentPlan = planOrganization(snapshot, rules);
 
     if (JSON.stringify(currentPlan) !== JSON.stringify(approvedPlan)) {
       throw new Error("Browser state changed after preview. Review the refreshed plan.");

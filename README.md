@@ -6,6 +6,14 @@ The extension plans changes before applying them. It preserves pinned tabs and e
 
 See [the MVP plan](docs/mvp-plan.md) for scope and acceptance criteria.
 
+## Rules
+
+Open **Edit rules** from the extension popup. Rules run from top to bottom and
+the first match wins. Each rule assigns loose, unpinned tabs to a native group
+by exact hostname, URL text, or title text. Existing groups remain intact.
+If the destination already has a group with the exact rule name, matching tabs
+and other exact-name groups join it, retaining its color and collapsed state.
+
 ## API spike
 
 Load `src` as a temporary add-on, open its background console, then inspect or

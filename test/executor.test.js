@@ -13,8 +13,9 @@ test("applies and validates a plan before closing source windows", async () => {
         tabs: [
           { id: 10, windowId: 1, index: 0, active: true, pinned: true, groupId: -1 },
           { id: 11, windowId: 1, index: 1, pinned: false, groupId: -1 },
+          { id: 12, windowId: 1, index: 2, pinned: false, groupId: 50 },
         ],
-        groups: [],
+        groups: [{ id: 50, title: "Matched", color: "green", collapsed: true }],
       },
       {
         id: 2,
@@ -23,19 +24,22 @@ test("applies and validates a plan before closing source windows", async () => {
           { id: 21, windowId: 2, index: 1, pinned: false, groupId: 30 },
           { id: 22, windowId: 2, index: 2, title: "Match", pinned: false, groupId: -1 },
           { id: 23, windowId: 2, index: 3, pinned: true, groupId: -1 },
+          { id: 24, windowId: 2, index: 4, title: "Create", pinned: false, groupId: -1 },
         ],
-        groups: [{ id: 30, title: "Existing", color: "blue", collapsed: true }],
+        groups: [{ id: 30, title: "Matched", color: "blue", collapsed: true }],
       },
     ],
   };
   const plan = planOrganization(snapshot, [
     { id: "match", name: "Matched", color: "red", match: { titleIncludes: ["match"] } },
+    { id: "create", name: "Created", color: "purple", match: { titleIncludes: ["create"] } },
   ]);
   const tabs = new Map(
     snapshot.windows.flatMap((window) => window.tabs).map((tab) => [tab.id, { ...tab }]),
   );
   const groups = new Map([
-    [30, { id: 30, windowId: 2, title: "Existing", color: "blue", collapsed: true }],
+    [30, { id: 30, windowId: 2, title: "Matched", color: "blue", collapsed: true }],
+    [50, { id: 50, windowId: 1, title: "Matched", color: "green", collapsed: true }],
   ]);
   const removedWindows = [];
   let storedSnapshot;
@@ -72,11 +76,22 @@ test("applies and validates a plan before closing source windows", async () => {
         tabs.set(tabId, { ...tabs.get(tabId), windowId });
         return tabs.get(tabId);
       },
-      group: async ({ tabIds }) => {
-        const groupId = 40;
-        groups.set(groupId, { id: groupId, windowId: 1, title: "", color: "grey", collapsed: false });
+      group: async ({ tabIds, groupId = 40 }) => {
+        if (!groups.has(groupId)) {
+          groups.set(groupId, { id: groupId, windowId: 1, title: "", color: "grey", collapsed: false });
+        }
+        const previousGroupIds = new Set(tabIds.map((tabId) => tabs.get(tabId).groupId));
         for (const tabId of tabIds) {
           tabs.set(tabId, { ...tabs.get(tabId), groupId });
+        }
+        for (const previousGroupId of previousGroupIds) {
+          if (
+            previousGroupId !== -1 &&
+            previousGroupId !== groupId &&
+            ![...tabs.values()].some((tab) => tab.groupId === previousGroupId)
+          ) {
+            groups.delete(previousGroupId);
+          }
         }
         return groupId;
       },
@@ -109,17 +124,29 @@ test("applies and validates a plan before closing source windows", async () => {
   assert.deepEqual(storedAnchorIds, [100]);
   assert.deepEqual(result, {
     movedGroups: 1,
-    movedTabs: 2,
+    movedTabs: 3,
     createdGroups: 1,
     closedWindows: 1,
   });
   assert.deepEqual(removedWindows, [2]);
   assert.equal(tabs.get(23).pinned, true);
   assert.equal(tabs.get(23).groupId, -1);
-  assert.equal(tabs.get(22).groupId, 40);
+  assert.equal(tabs.get(22).groupId, 50);
+  assert.equal(tabs.get(20).groupId, 50);
+  assert.equal(tabs.get(21).groupId, 50);
+  assert.equal(tabs.get(24).groupId, 40);
+  assert.equal(groups.has(30), false);
+  assert.deepEqual(groups.get(50), {
+    id: 50,
+    windowId: 1,
+    title: "Matched",
+    color: "green",
+    collapsed: true,
+  });
   assert.deepEqual(moveCalls, [
     { tabId: 23, windowId: 1, index: 1 },
-    { tabId: 22, windowId: 1, index: 5 },
+    { tabId: 22, windowId: 1, index: 6 },
+    { tabId: 24, windowId: 1, index: 7 },
   ]);
 });
 
@@ -168,8 +195,13 @@ test("undo recreates source windows and reports disappeared tabs", async () => {
           { id: 21, windowId: 2, index: 1, pinned: false, groupId: 30 },
           { id: 22, windowId: 2, index: 2, pinned: false, groupId: -1 },
           { id: 23, windowId: 2, index: 3, pinned: true, groupId: -1 },
+          { id: 24, windowId: 2, index: 4, pinned: false, groupId: 31 },
+          { id: 25, windowId: 2, index: 5, pinned: false, groupId: 31 },
         ],
-        groups: [{ id: 30, title: "Existing", color: "blue", collapsed: true }],
+        groups: [
+          { id: 30, title: "Existing", color: "blue", collapsed: true },
+          { id: 31, title: "Merged", color: "yellow", collapsed: false },
+        ],
       },
     ],
   };
@@ -179,6 +211,8 @@ test("undo recreates source windows and reports disappeared tabs", async () => {
     [20, { ...snapshot.windows[1].tabs[0], windowId: 1 }],
     [21, { ...snapshot.windows[1].tabs[1], windowId: 1 }],
     [22, { ...snapshot.windows[1].tabs[2], windowId: 1, groupId: 40 }],
+    [24, { ...snapshot.windows[1].tabs[4], windowId: 1, groupId: 40 }],
+    [25, { ...snapshot.windows[1].tabs[5], windowId: 1, groupId: 40 }],
   ]);
   const groups = new Map([
     [30, { id: 30, windowId: 1, title: "Existing", color: "blue", collapsed: true }],
@@ -229,6 +263,20 @@ test("undo recreates source windows and reports disappeared tabs", async () => {
         tabs.set(id, { ...tabs.get(id), ...changes });
       },
       move: async (id, { windowId }) => { tabs.set(id, { ...tabs.get(id), windowId }); },
+      group: async ({ tabIds, createProperties }) => {
+        const groupId = 60;
+        groups.set(groupId, {
+          id: groupId,
+          windowId: createProperties.windowId,
+          title: "",
+          color: "grey",
+          collapsed: false,
+        });
+        for (const tabId of tabIds) {
+          tabs.set(tabId, { ...tabs.get(tabId), groupId });
+        }
+        return groupId;
+      },
       remove: async (id) => { tabs.delete(id); },
     },
     tabGroups: {
@@ -249,13 +297,20 @@ test("undo recreates source windows and reports disappeared tabs", async () => {
   const result = await undoLastOrganization(api);
 
   assert.equal(result.restoredTabs, 1);
-  assert.equal(result.restoredGroups, 1);
+  assert.equal(result.restoredGroups, 2);
   assert.equal(result.unchangedTabs, 1);
   assert.equal(result.unchangedGroups, 1);
   assert.match(result.warnings.join("\n"), /Tab 23 disappeared/);
   assert.equal(tabs.get(22).windowId, 200);
   assert.equal(tabs.get(22).groupId, -1);
   assert.equal(groups.get(30).windowId, 200);
+  assert.deepEqual(groups.get(60), {
+    id: 60,
+    windowId: 200,
+    title: "Merged",
+    color: "yellow",
+    collapsed: false,
+  });
   assert.deepEqual(movedGroupIds, [30]);
   assert.equal(focusedWindowId, 1);
   assert.equal(removedUndo, true);

@@ -71,7 +71,7 @@ export function planOrganization(snapshot, rules = []) {
         continue;
       }
 
-      let group = ruleGroups.get(rule);
+      let group = ruleGroups.get(rule.name);
 
       if (!group) {
         group = {
@@ -80,11 +80,48 @@ export function planOrganization(snapshot, rules = []) {
           color: rule.color,
           tabMoves: [],
         };
-        ruleGroups.set(rule, group);
+        ruleGroups.set(rule.name, group);
         plan.newGroups.push(group);
       }
 
       group.tabMoves.push(move);
+    }
+  }
+
+  for (const rule of rules) {
+    const matchingGroups = plan.preservedGroups.filter(
+      (group) => group.title === rule.name,
+    );
+    let group = ruleGroups.get(rule.name);
+
+    if (!group && matchingGroups.length < 2) {
+      continue;
+    }
+    if (!group) {
+      group = {
+        ruleId: rule.id,
+        title: rule.name,
+        color: rule.color,
+        tabMoves: [],
+      };
+      ruleGroups.set(rule.name, group);
+      plan.newGroups.push(group);
+    }
+    if (matchingGroups.length) {
+      const target = matchingGroups.find(
+        (candidate) => candidate.sourceWindowId === destination.id,
+      ) ?? matchingGroups[0];
+      const mergeGroupIds = matchingGroups
+        .filter((candidate) => candidate.id !== target.id)
+        .map((candidate) => candidate.id);
+
+      group.targetGroupId = target.id;
+      if (mergeGroupIds.length) {
+        group.mergeGroupIds = mergeGroupIds;
+        group.mergeTabCount = matchingGroups
+          .filter((candidate) => candidate.id !== target.id)
+          .reduce((count, candidate) => count + candidate.tabIds.length, 0);
+      }
     }
   }
 

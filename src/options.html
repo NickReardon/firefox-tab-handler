@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tab organizer rules</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body class="options">
+    <main>
+      <h1>Organization rules</h1>
+      <p>Rules run from top to bottom. The first matching rule wins.</p>
+      <ol id="rules"></ol>
+      <div class="actions">
+        <button id="add-rule" type="button">Add rule</button>
+        <button id="save-rules" type="button">Save rules</button>
+      </div>
+      <p id="status" role="status"></p>
+    </main>
+
+    <template id="rule-template">
+      <li class="rule">
+        <label>Name <input class="rule-name" type="text" required /></label>
+        <label>
+          Color
+          <select class="rule-color">
+            <option>grey</option><option>blue</option><option>red</option>
+            <option>yellow</option><option>green</option><option>pink</option>
+            <option>purple</option><option>cyan</option><option>orange</option>
+          </select>
+        </label>
+        <label>Hostnames, one per line <textarea class="rule-hostnames"></textarea></label>
+        <label>URL text, one per line <textarea class="rule-urls"></textarea></label>
+        <label>Title text, one per line <textarea class="rule-titles"></textarea></label>
+        <div class="actions">
+          <button class="move-up" type="button">Move up</button>
+          <button class="move-down" type="button">Move down</button>
+          <button class="delete-rule" type="button">Delete</button>
+        </div>
+      </li>
+    </template>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
