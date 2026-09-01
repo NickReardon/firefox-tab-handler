@@ -76,6 +76,14 @@ Execute an approved plan in this order:
 
 Firefox does not make these operations atomic. Undo restores the captured layout where possible and reports tabs that disappeared or could not be restored.
 
+Status: accepted on 2026-09-01.
+
+- `pnpm test` passes 13 focused apply, undo, logging, background-routing, planner, preview, and API-spike checks.
+- Manual temporary-add-on validation confirmed apply moved a preserved group and loose tab, restored the active tab, validated the result, and closed the source window only afterward.
+- Manual undo recreated the source window, restored the group and loose tab, left 40 already-correct destination tabs unchanged, and completed with no warnings.
+- Detailed background logging is opt-in through the popup and records operation stages, identifiers, counts, and failures without tab titles or URLs.
+- `web-ext lint` reports zero errors and one Android-only minimum-version warning; a clean desktop build succeeds.
+
 ## Milestone 4: deterministic rules
 
 Store ordered rules in `storage.local`. A rule can match hostname, URL substring, or title keyword, then assign a native group name and color. First matching rule wins.

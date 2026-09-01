@@ -34,6 +34,17 @@
           <h2 id="warnings-heading">Warnings</h2>
           <ul id="warnings"></ul>
         </section>
+
+        <p>Apply moves tabs and closes source windows only after validation.</p>
+        <label class="setting">
+          <input id="debug-logging" type="checkbox" />
+          Detailed background logging
+        </label>
+        <div class="actions">
+          <button id="apply" type="button">Apply plan</button>
+          <button id="undo" type="button" disabled>Undo last apply</button>
+        </div>
+        <p id="result" role="status"></p>
       </div>
     </main>
     <script type="module" src="popup.js"></script>

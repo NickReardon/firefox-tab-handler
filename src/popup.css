@@ -33,3 +33,13 @@ li {
 #status[role="alert"] {
   color: #c33;
 }
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.setting {
+  display: block;
+  margin-bottom: 0.75rem;
+}

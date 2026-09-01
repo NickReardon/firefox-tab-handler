@@ -20,3 +20,11 @@ await window.spike.moveExistingGroup(browser, groupId, destinationWindowId);
 
 Use IDs from the snapshot. Test moves only from source windows that contain a
 tab outside the item being moved so Firefox does not close the source window.
+
+## Debug logging
+
+Use the **Detailed background logging** checkbox in the extension popup. The
+setting persists across extension and browser restarts.
+
+Logs include operation stages, browser object IDs, counts, and failures. They do
+not include tab titles or URLs.

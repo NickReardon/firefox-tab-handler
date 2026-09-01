@@ -59,6 +59,10 @@ function renderList(selector, items) {
 async function loadPreview() {
   const status = document.querySelector("#status");
   const preview = document.querySelector("#preview");
+  const applyButton = document.querySelector("#apply");
+  const undoButton = document.querySelector("#undo");
+  const debugLogging = document.querySelector("#debug-logging");
+  const result = document.querySelector("#result");
 
   try {
     const plan = await browser.runtime.sendMessage({ type: "planner:preview" });
@@ -75,6 +79,69 @@ async function loadPreview() {
     renderList("#loose-moves", plan.looseTabMoves);
     renderList("#new-groups", plan.newGroups);
     renderList("#warnings", plan.warnings);
+    undoButton.disabled = !(await browser.runtime.sendMessage({
+      type: "planner:undo-available",
+    }));
+    debugLogging.checked = await browser.runtime.sendMessage({
+      type: "logging:get",
+    });
+
+    debugLogging.addEventListener("change", async () => {
+      debugLogging.disabled = true;
+
+      try {
+        debugLogging.checked = await browser.runtime.sendMessage({
+          type: "logging:set",
+          enabled: debugLogging.checked,
+        });
+        result.setAttribute("role", "status");
+        result.textContent = `Detailed logging ${debugLogging.checked ? "enabled" : "disabled"}.`;
+      } catch (error) {
+        debugLogging.checked = !debugLogging.checked;
+        result.setAttribute("role", "alert");
+        result.textContent = `Could not update logging: ${error.message}`;
+      } finally {
+        debugLogging.disabled = false;
+      }
+    });
+
+    applyButton.addEventListener("click", async () => {
+      applyButton.disabled = true;
+      undoButton.disabled = true;
+      result.textContent = "Applying plan...";
+
+      try {
+        const applied = await browser.runtime.sendMessage({
+          type: "planner:apply",
+          plan,
+        });
+        result.textContent = `Applied: ${applied.movedGroups} groups and ${applied.movedTabs} loose tabs moved; ${applied.closedWindows} windows closed.`;
+        undoButton.disabled = false;
+      } catch (error) {
+        result.setAttribute("role", "alert");
+        result.textContent = `Apply failed: ${error.message}`;
+        undoButton.disabled = !(await browser.runtime.sendMessage({
+          type: "planner:undo-available",
+        }));
+      }
+    });
+
+    undoButton.addEventListener("click", async () => {
+      applyButton.disabled = true;
+      undoButton.disabled = true;
+      result.textContent = "Restoring the previous layout...";
+
+      try {
+        const undone = await browser.runtime.sendMessage({ type: "planner:undo" });
+        const warningText = undone.warnings.length
+          ? ` ${undone.warnings.join(" ")}`
+          : "";
+        result.textContent = `Undo restored ${undone.restoredGroups} groups and ${undone.restoredTabs} loose tabs.${warningText}`;
+      } catch (error) {
+        result.setAttribute("role", "alert");
+        result.textContent = `Undo failed: ${error.message}`;
+      }
+    });
 
     status.textContent = "Preview ready. No changes have been made.";
     preview.hidden = false;
