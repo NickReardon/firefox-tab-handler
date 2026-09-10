@@ -8,46 +8,71 @@
   </head>
   <body class="options">
     <main>
-      <h1>Organization rules</h1>
-      <p>Rules run from top to bottom. The first matching rule wins.</p>
-      <ol id="rules"></ol>
-      <div class="actions">
-        <button id="add-rule" type="button">Add rule</button>
-        <button id="save-rules" type="button">Save rules</button>
-        <button id="export-rules" type="button">Export rules</button>
-      </div>
-      <p id="status" role="status"></p>
-
-      <section aria-labelledby="import-heading">
-        <h2 id="import-heading">Import rules</h2>
-        <input id="import-file" type="file" accept="application/json,.json" />
-        <div id="import-preview" hidden>
-          <h3>Added</h3><ul id="import-added"></ul>
-          <h3>Changed</h3><ul id="import-changed"></ul>
-          <h3>Removed</h3><ul id="import-removed"></ul>
-          <button id="apply-import" type="button" disabled>Replace saved rules</button>
+      <header class="options-header">
+        <div class="options-header-row">
+          <h1>Organization rules</h1>
         </div>
-      </section>
+        <p>Rules run from top to bottom. The first matching rule wins.</p>
+        <div class="options-rule-actions">
+          <div class="actions">
+            <button id="add-rule" type="button">Add rule</button>
+            <button id="save-rules" type="button">Save rules</button>
+            <button id="export-rules" type="button">Export rules</button>
+          </div>
+          <p id="status" role="status"></p>
+        </div>
+        <section aria-labelledby="import-heading">
+          <h2 id="import-heading">Import rules</h2>
+          <div class="options-import-actions">
+            <input id="import-file" type="file" accept="application/json,.json" />
+            <div class="actions">
+              <button id="collapse-all" type="button">Collapse all</button>
+              <button id="expand-all" type="button">Expand all</button>
+            </div>
+          </div>
+          <div id="import-preview" hidden>
+            <h3>Added</h3><ul id="import-added"></ul>
+            <h3>Changed</h3><ul id="import-changed"></ul>
+            <h3>Removed</h3><ul id="import-removed"></ul>
+            <button id="apply-import" type="button" disabled>Replace saved rules</button>
+          </div>
+        </section>
+      </header>
+      <div class="options-content">
+        <ol id="rules"></ol>
+      </div>
     </main>
 
     <template id="rule-template">
       <li class="rule">
-        <label>Name <input class="rule-name" type="text" required /></label>
-        <label>
-          Color
-          <select class="rule-color">
-            <option>grey</option><option>blue</option><option>red</option>
-            <option>yellow</option><option>green</option><option>pink</option>
-            <option>purple</option><option>cyan</option><option>orange</option>
-          </select>
-        </label>
-        <label>Hostnames, one per line <textarea class="rule-hostnames"></textarea></label>
-        <label>URL text, one per line <textarea class="rule-urls"></textarea></label>
-        <label>Title text, one per line <textarea class="rule-titles"></textarea></label>
-        <div class="actions">
-          <button class="move-up" type="button">Move up</button>
+        <div class="rule-header">
+          <button class="toggle-rule" type="button" aria-expanded="true">Collapse</button>
+          <span class="rule-heading">
+            <strong class="rule-summary"></strong>
+            <small class="rule-color-summary"></small>
+          </span>
+          <div class="actions">
+            <button class="move-up" type="button">Move up</button>
+            <button class="delete-rule" type="button">Delete</button>
+          </div>
+        </div>
+        <div class="rule-fields">
+          <label>Name <input class="rule-name" type="text" required /></label>
+          <label>
+            Color
+            <select class="rule-color">
+              <option>grey</option><option>blue</option><option>red</option>
+              <option>yellow</option><option>green</option><option>pink</option>
+              <option>purple</option><option>cyan</option><option>orange</option>
+            </select>
+          </label>
+          <label>Hostnames, one per line <textarea class="rule-hostnames"></textarea></label>
+          <label>URL text, one per line <textarea class="rule-urls"></textarea></label>
+          <label>Title text, one per line <textarea class="rule-titles"></textarea></label>
+        </div>
+        <div class="rule-footer">
+          <small class="rule-condensed"></small>
           <button class="move-down" type="button">Move down</button>
-          <button class="delete-rule" type="button">Delete</button>
         </div>
       </li>
     </template>

@@ -45,14 +45,111 @@ li {
 }
 
 body.options {
+  max-width: none;
+  height: 100vh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.options-header {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  box-sizing: border-box;
+  width: calc(100% - 2rem);
+  max-width: 68rem;
+  margin-inline: auto;
+  border-bottom: 1px solid currentColor;
+  padding: 1rem;
+  background: Canvas;
+}
+
+.options-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.options-header-row h1 {
+  margin-bottom: 0;
+}
+
+.options-rule-actions,
+.options-import-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.options-rule-actions #status {
+  margin: 0;
+}
+
+.options-import-actions .actions {
+  margin-left: auto;
+}
+
+body.options main {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.options-content {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 1rem 1rem;
+}
+
+#rules {
   max-width: 60rem;
-  margin: auto;
+  margin-inline: auto;
 }
 
 .rule {
   margin-bottom: 1rem;
   padding: 0.75rem;
   border: 1px solid currentColor;
+  border-left-width: 0.5rem;
+}
+
+.rule-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rule-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.rule-color-summary {
+  margin-left: 0.5rem;
+  opacity: 0.75;
+}
+
+.rule-condensed {
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.rule-fields {
+  margin-top: 0.75rem;
+}
+
+.rule-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.rule-footer .rule-condensed {
+  flex: 1;
+  min-width: 0;
 }
 
 .rule label {
