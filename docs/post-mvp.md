@@ -13,3 +13,10 @@
 ## Gate for LLM integration
 
 Do not add an LLM API until the deterministic organizer is trusted in daily use. Any future LLM sorting path needs an explicit preview, user approval before tab mutation, and a clear data-transmission disclosure.
+
+## Release baseline
+
+The MVP has a repeatable local release gate and documented privacy, manual
+acceptance, signing, and distribution boundaries. Mozilla signing remains
+blocked on deliberate choices for the permanent Gecko ID, source license, and
+listed-versus-unlisted channel.

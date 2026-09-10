@@ -6,6 +6,17 @@ The extension plans changes before applying them. It preserves pinned tabs and e
 
 See [the MVP plan](docs/mvp-plan.md) for scope and acceptance criteria.
 
+## Install for development
+
+Run `pnpm install --frozen-lockfile`, then either:
+
+- Run `pnpm run run` to launch Firefox with a temporary profile.
+- Open `about:debugging`, choose **This Firefox**, choose **Load Temporary Add-on**, and select `src/manifest.json`.
+
+Temporary add-ons are removed when Firefox restarts. The ZIP produced by
+`pnpm run build` is unsigned and is not a permanent-install release artifact.
+See [the release guide](docs/release.md) before distributing it.
+
 ## Rules
 
 Open **Edit rules** from the extension popup. Rules run from top to bottom and
@@ -44,3 +55,14 @@ setting persists across extension and browser restarts.
 
 Logs include operation stages, browser object IDs, counts, and failures. They do
 not include tab titles or URLs.
+
+## Privacy and permissions
+
+The extension runs locally and makes no network requests. It uses `tabs` and
+`tabGroups` to preview and apply organization, and `storage` for rules, logging
+preference, and one undo snapshot. Private browsing is disabled.
+
+Tab titles and URLs remain inside Firefox unless the user explicitly downloads
+a tab inventory. Inventory URLs omit credentials, query strings, and fragments
+by default. The full-URL checkbox includes query strings and fragments, but
+credentials remain removed.
