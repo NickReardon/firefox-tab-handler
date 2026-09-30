@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { itemLabel } from "../src/popup.js";
+import { itemLabel, summarizePlan } from "../src/popup.js";
 
 test("labels preview items as moves or keeps with useful tab state", () => {
   assert.equal(
@@ -39,4 +39,22 @@ test("labels preview items as moves or keeps with useful tab state", () => {
     }),
     "Matched - 3 tabs - Color red - Join group 50 - Merge groups 30",
   );
+});
+
+test("summarizes each preview category without exposing its details", () => {
+  assert.deepEqual(
+    summarizePlan({
+      preservedGroups: [{ id: 1 }],
+      looseTabMoves: [{ tabId: 2 }, { tabId: 3 }],
+      newGroups: [{ title: "Docs" }],
+      warnings: [],
+    }),
+    { preservedGroups: 1, looseTabs: 2, ruleGroups: 1, warnings: 0 },
+  );
+  assert.deepEqual(summarizePlan({}), {
+    preservedGroups: 0,
+    looseTabs: 0,
+    ruleGroups: 0,
+    warnings: 0,
+  });
 });

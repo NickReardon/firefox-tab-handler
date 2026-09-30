@@ -53,6 +53,15 @@ export function itemLabel(item) {
   return parts.join(" - ") || "Unnamed item";
 }
 
+export function summarizePlan(plan) {
+  return {
+    preservedGroups: Array.isArray(plan?.preservedGroups) ? plan.preservedGroups.length : 0,
+    looseTabs: Array.isArray(plan?.looseTabMoves) ? plan.looseTabMoves.length : 0,
+    ruleGroups: Array.isArray(plan?.newGroups) ? plan.newGroups.length : 0,
+    warnings: Array.isArray(plan?.warnings) ? plan.warnings.length : 0,
+  };
+}
+
 function renderList(selector, items) {
   const list = document.querySelector(selector);
   const values = Array.isArray(items) ? items : [];
@@ -85,6 +94,11 @@ async function loadPreview() {
       throw new Error("The planner returned no preview.");
     }
 
+    const summary = summarizePlan(plan);
+    document.querySelector("#preserved-count").textContent = String(summary.preservedGroups);
+    document.querySelector("#loose-count").textContent = String(summary.looseTabs);
+    document.querySelector("#rule-count").textContent = String(summary.ruleGroups);
+    document.querySelector("#warning-count").textContent = String(summary.warnings);
     document.querySelector("#destination").textContent =
       String(plan.destinationWindowId ?? "Unknown");
     document.querySelector("#active-tab").textContent =

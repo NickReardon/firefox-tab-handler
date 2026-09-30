@@ -8,11 +8,16 @@ const { handleBackgroundMessage } = await import("../src/background.js");
 test("builds a preview without exposing mutation messages", async () => {
   const tab = { id: 10, windowId: 1, index: 0, active: true, pinned: false, groupId: -1 };
   const stored = {};
+  const session = {};
   const api = {
     storage: {
       local: {
         set: async (values) => Object.assign(stored, values),
         get: async () => stored,
+      },
+      session: {
+        get: async (key) => ({ [key]: session[key] }),
+        remove: async (key) => delete session[key],
       },
     },
     windows: {

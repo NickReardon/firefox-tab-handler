@@ -7,54 +7,72 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <main>
-      <h1>Organization preview</h1>
-      <button id="open-options" type="button">Edit rules</button>
+    <main class="popup">
+      <header class="popup-header">
+        <div class="popup-title">
+          <img src="icons/icon.svg" alt="" width="32" height="32" />
+          <h1>Tab organizer</h1>
+        </div>
+        <button id="open-options" class="secondary" type="button">Edit rules</button>
+      </header>
       <p id="status" role="status">Loading preview...</p>
 
       <div id="preview" hidden>
-        <p><strong>Destination window:</strong> <span id="destination"></span></p>
-        <p><strong>Active tab to restore:</strong> <span id="active-tab"></span></p>
+        <dl class="summary" aria-label="Plan summary">
+          <div><dt>Existing groups</dt><dd id="preserved-count">0</dd></div>
+          <div><dt>Loose tabs</dt><dd id="loose-count">0</dd></div>
+          <div><dt>Rule groups</dt><dd id="rule-count">0</dd></div>
+          <div><dt>Warnings</dt><dd id="warning-count">0</dd></div>
+        </dl>
 
-        <section aria-labelledby="preserved-heading">
-          <h2 id="preserved-heading">Preserved groups</h2>
-          <ul id="preserved-groups"></ul>
-        </section>
-
-        <section aria-labelledby="moves-heading">
-          <h2 id="moves-heading">Loose tabs</h2>
-          <ul id="loose-moves"></ul>
-        </section>
-
-        <section aria-labelledby="new-groups-heading">
-          <h2 id="new-groups-heading">Rule groups</h2>
-          <ul id="new-groups"></ul>
-        </section>
-
-        <section aria-labelledby="warnings-heading">
-          <h2 id="warnings-heading">Warnings</h2>
-          <ul id="warnings"></ul>
-        </section>
-
-        <section aria-labelledby="inventory-heading">
-          <h2 id="inventory-heading">Tab inventory</h2>
-          <label class="setting">
-            <input id="include-full-urls" type="checkbox" />
-            Include query strings and fragments
-          </label>
-          <button id="export-inventory" type="button">Export tab inventory</button>
-        </section>
-
-        <p>Apply moves tabs and closes source windows only after validation.</p>
-        <label class="setting">
-          <input id="debug-logging" type="checkbox" />
-          Detailed background logging
-        </label>
         <div class="actions">
-          <button id="apply" type="button">Apply plan</button>
+          <button id="apply" class="primary" type="button">Apply</button>
           <button id="undo" type="button" disabled>Undo last apply</button>
         </div>
+        <p class="safety-note">Tabs move only after the plan is validated.</p>
         <p id="result" role="status"></p>
+
+        <details>
+          <summary>Plan details</summary>
+          <p><strong>Destination window:</strong> <span id="destination"></span></p>
+          <p><strong>Active tab to restore:</strong> <span id="active-tab"></span></p>
+
+          <section aria-labelledby="preserved-heading">
+            <h2 id="preserved-heading">Preserved groups</h2>
+            <ul id="preserved-groups"></ul>
+          </section>
+
+          <section aria-labelledby="moves-heading">
+            <h2 id="moves-heading">Loose tabs</h2>
+            <ul id="loose-moves"></ul>
+          </section>
+
+          <section aria-labelledby="new-groups-heading">
+            <h2 id="new-groups-heading">Rule groups</h2>
+            <ul id="new-groups"></ul>
+          </section>
+
+          <section aria-labelledby="warnings-heading">
+            <h2 id="warnings-heading">Warnings</h2>
+            <ul id="warnings"></ul>
+          </section>
+        </details>
+
+        <details>
+          <summary>Tools and diagnostics</summary>
+          <section aria-labelledby="inventory-heading">
+            <h2 id="inventory-heading">Tab inventory</h2>
+            <label class="setting">
+              <input id="include-full-urls" type="checkbox" />
+              Include query strings and fragments
+            </label>
+            <button id="export-inventory" type="button">Export tab inventory</button>
+          </section>
+          <label class="setting">
+            <input id="debug-logging" type="checkbox" />
+            Detailed background logging
+          </label>
+        </details>
       </div>
     </main>
     <script type="module" src="popup.js"></script>

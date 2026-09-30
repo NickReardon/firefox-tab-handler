@@ -117,6 +117,67 @@ test("uses the first matching rule", () => {
   ]);
 });
 
+test("scoped planning can select a later matching rule", () => {
+  const plan = planOrganization(snapshot, rules, {
+    tabIds: [22],
+    ruleId: "epic",
+  });
+
+  assert.deepEqual(plan.newGroups.map(({ ruleId, tabMoves }) => [
+    ruleId,
+    tabMoves.map(({ tabId }) => tabId),
+  ]), [["epic", [22]]]);
+  assert.throws(
+    () => planOrganization(snapshot, rules, { tabIds: [22], ruleId: "missing" }),
+    /no longer available/,
+  );
+  assert.throws(
+    () => planOrganization(snapshot, rules, { tabIds: [11], ruleId: "epic" }),
+    /no longer matches/,
+  );
+});
+
+test("explicit scoped rules can move a tab out of an existing group", () => {
+  const plan = planOrganization(snapshot, rules, {
+    tabIds: [20],
+    ruleId: "epic",
+  });
+
+  assert.deepEqual(plan.preservedGroups, []);
+  assert.deepEqual(plan.newGroups[0].tabMoves.map(({ tabId }) => tabId), [20]);
+});
+
+test("limits a plan to selected tabs while retaining its destination window", () => {
+  const plan = planOrganization(snapshot, rules, { tabIds: [11, 23] });
+
+  assert.equal(plan.destinationWindowId, 1);
+  assert.deepEqual(plan.looseTabMoves.map(({ tabId }) => tabId), [11]);
+  assert.deepEqual(
+    plan.newGroups.flatMap((group) => group.tabMoves.map(({ tabId }) => tabId)),
+    [23],
+  );
+  assert.deepEqual(plan.preservedGroups, []);
+});
+
+test("scoped planning reuses one unselected group without merging its peers", () => {
+  const scopedSnapshot = structuredClone(snapshot);
+  scopedSnapshot.windows[0].tabs.push(
+    { id: 12, windowId: 1, index: 2, title: "Existing", groupId: 40 },
+    { id: 13, windowId: 1, index: 3, title: "Existing", groupId: 41 },
+    { id: 14, windowId: 1, index: 4, title: "Tethered issue", groupId: -1 },
+  );
+  scopedSnapshot.windows[0].groups.push(
+    { id: 40, title: "Tethered", color: "green", collapsed: false },
+    { id: 41, title: "Tethered", color: "yellow", collapsed: false },
+  );
+
+  const plan = planOrganization(scopedSnapshot, rules, { tabIds: [14] });
+
+  assert.equal(plan.newGroups[0].targetGroupId, 40);
+  assert.equal(plan.newGroups[0].mergeGroupIds, undefined);
+  assert.deepEqual(plan.preservedGroups, []);
+});
+
 test("targets an existing destination group with the exact rule name", () => {
   const matchingSnapshot = structuredClone(snapshot);
   matchingSnapshot.windows[0].tabs.push({

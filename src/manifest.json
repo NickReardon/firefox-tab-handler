@@ -3,6 +3,10 @@
   "name": "Firefox Tab Organizer",
   "version": "0.1.0",
   "description": "Safely consolidate Firefox windows and organize loose tabs into native groups.",
+  "icons": {
+    "48": "icons/icon.svg",
+    "96": "icons/icon.svg"
+  },
   "browser_specific_settings": {
     "gecko": {
       "id": "firefox-tab-organizer@example.invalid",
@@ -18,11 +22,12 @@
     "type": "module"
   },
   "action": {
+    "default_icon": "icons/toolbar.svg",
     "default_popup": "popup.html"
   },
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
   },
-  "permissions": ["tabs", "tabGroups", "storage"]
+  "permissions": ["tabs", "tabGroups", "storage", "menus"]
 }

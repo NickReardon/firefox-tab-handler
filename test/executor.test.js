@@ -213,7 +213,7 @@ test("undo recreates source windows and reports disappeared tabs", async () => {
   };
   const tabs = new Map([
     [10, { ...snapshot.windows[0].tabs[0] }],
-    [12, { ...snapshot.windows[0].tabs[1] }],
+    [12, { ...snapshot.windows[0].tabs[1], groupId: 40 }],
     [20, { ...snapshot.windows[1].tabs[0], windowId: 1 }],
     [21, { ...snapshot.windows[1].tabs[1], windowId: 1 }],
     [22, { ...snapshot.windows[1].tabs[2], windowId: 1, groupId: 40 }],
@@ -269,19 +269,21 @@ test("undo recreates source windows and reports disappeared tabs", async () => {
         tabs.set(id, { ...tabs.get(id), ...changes });
       },
       move: async (id, { windowId }) => { tabs.set(id, { ...tabs.get(id), windowId }); },
-      group: async ({ tabIds, createProperties }) => {
-        const groupId = 60;
-        groups.set(groupId, {
-          id: groupId,
-          windowId: createProperties.windowId,
-          title: "",
-          color: "grey",
-          collapsed: false,
-        });
-        for (const tabId of tabIds) {
-          tabs.set(tabId, { ...tabs.get(tabId), groupId });
+      group: async ({ tabIds, groupId, createProperties }) => {
+        const targetGroupId = groupId ?? 60;
+        if (createProperties) {
+          groups.set(targetGroupId, {
+            id: targetGroupId,
+            windowId: createProperties.windowId,
+            title: "",
+            color: "grey",
+            collapsed: false,
+          });
         }
-        return groupId;
+        for (const tabId of tabIds) {
+          tabs.set(tabId, { ...tabs.get(tabId), groupId: targetGroupId });
+        }
+        return targetGroupId;
       },
       remove: async (id) => { tabs.delete(id); },
     },
@@ -303,12 +305,13 @@ test("undo recreates source windows and reports disappeared tabs", async () => {
   const result = await undoLastOrganization(api);
 
   assert.equal(result.restoredTabs, 1);
-  assert.equal(result.restoredGroups, 2);
+  assert.equal(result.restoredGroups, 3);
   assert.equal(result.unchangedTabs, 1);
-  assert.equal(result.unchangedGroups, 1);
+  assert.equal(result.unchangedGroups, 0);
   assert.match(result.warnings.join("\n"), /Tab 23 disappeared/);
   assert.equal(tabs.get(22).windowId, 200);
   assert.equal(tabs.get(22).groupId, -1);
+  assert.equal(tabs.get(12).groupId, 50);
   assert.equal(groups.get(30).windowId, 200);
   assert.deepEqual(groups.get(60), {
     id: 60,

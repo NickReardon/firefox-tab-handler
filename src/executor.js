@@ -285,11 +285,24 @@ export async function undoLastOrganization(api) {
         live.color !== group.color ||
         live.collapsed !== group.collapsed
       );
+      const missingMemberIds = [];
+
+      for (const expected of original.tabs.filter((tab) => tab.groupId === groupId)) {
+        try {
+          const tab = await api.tabs.get(expected.id);
+
+          if (tab.windowId !== targetWindowId || tab.groupId !== groupId) {
+            missingMemberIds.push(tab.id);
+          }
+        } catch {
+          warnings.push(`Tab ${expected.id} disappeared and could not be restored.`);
+        }
+      }
 
       if (!group) {
         warnings.push(`Group ${groupId} metadata was unavailable during undo.`);
       }
-      if (!needsMove && !needsMetadata) {
+      if (!needsMove && !needsMetadata && !missingMemberIds.length) {
         unchangedGroups += 1;
         continue;
       }
@@ -305,6 +318,19 @@ export async function undoLastOrganization(api) {
             collapsed: group.collapsed,
           });
         }
+        for (const tabId of missingMemberIds) {
+          const tab = await api.tabs.get(tabId);
+
+          if (tab.windowId !== targetWindowId) {
+            if (tab.groupId !== NO_GROUP) {
+              await api.tabs.ungroup(tabId);
+            }
+            await api.tabs.move(tabId, { windowId: targetWindowId, index: -1 });
+          }
+        }
+        if (missingMemberIds.length) {
+          await api.tabs.group({ tabIds: missingMemberIds, groupId });
+        }
         if (needsMove) {
           await removeAnchor(targetWindowId);
         }
@@ -315,6 +341,7 @@ export async function undoLastOrganization(api) {
           restoredWindowId: targetWindowId,
           moved: needsMove,
           metadataUpdated: Boolean(needsMetadata),
+          restoredMemberIds: missingMemberIds,
         });
       } catch (error) {
         warnings.push(`Group ${groupId} could not be restored: ${error.message}`);

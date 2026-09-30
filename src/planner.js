@@ -1,6 +1,6 @@
 const NO_GROUP = -1;
 
-export function planOrganization(snapshot, rules = []) {
+export function planOrganization(snapshot, rules = [], { tabIds, ruleId } = {}) {
   const windows = (snapshot.windows ?? []).filter(
     (window) => !window.incognito && (!window.type || window.type === "normal"),
   );
@@ -22,12 +22,36 @@ export function planOrganization(snapshot, rules = []) {
   };
   const plannedGroups = new Map();
   const ruleGroups = new Map();
+  const includedTabIds = tabIds ? new Set(tabIds) : undefined;
+  const selectedRule = ruleId === undefined
+    ? undefined
+    : rules.find((rule) => rule.id === ruleId);
+
+  if (ruleId !== undefined && !selectedRule) {
+    throw new Error(`Rule ${ruleId} is no longer available.`);
+  }
 
   for (const window of windows) {
     const groups = new Map((window.groups ?? []).map((group) => [group.id, group]));
 
     for (const tab of window.tabs ?? []) {
-      if (tab.groupId !== undefined && tab.groupId !== null && tab.groupId !== NO_GROUP) {
+      if (includedTabIds && !includedTabIds.has(tab.id)) {
+        continue;
+      }
+
+      const selectedRuleMatch = selectedRule && !tab.pinned &&
+        matchesRule(selectedRule, tab);
+
+      if (selectedRule && !selectedRuleMatch) {
+        throw new Error(`Tab ${tab.id} no longer matches rule ${selectedRule.name}.`);
+      }
+
+      if (
+        tab.groupId !== undefined &&
+        tab.groupId !== null &&
+        tab.groupId !== NO_GROUP &&
+        !selectedRuleMatch
+      ) {
         let group = plannedGroups.get(tab.groupId);
 
         if (!group) {
@@ -64,7 +88,9 @@ export function planOrganization(snapshot, rules = []) {
         requiresMove: window.id !== destination.id,
         pinned: Boolean(tab.pinned),
       };
-      const rule = !tab.pinned && rules.find((candidate) => matches(candidate, tab));
+      const rule = !tab.pinned && (selectedRule
+        ? (matchesRule(selectedRule, tab) ? selectedRule : undefined)
+        : rules.find((candidate) => matchesRule(candidate, tab)));
 
       if (!rule) {
         plan.looseTabMoves.push(move);
@@ -93,6 +119,20 @@ export function planOrganization(snapshot, rules = []) {
       (group) => group.title === rule.name,
     );
     let group = ruleGroups.get(rule.name);
+
+    if (includedTabIds) {
+      if (group) {
+        const target = matchingGroups[0] ?? (destination.groups ?? []).find(
+          (candidate) => candidate.title === rule.name,
+        );
+
+        if (target) {
+          group.targetGroupId = target.id;
+        }
+      }
+
+      continue;
+    }
 
     if (!group && matchingGroups.length < 2) {
       continue;
@@ -132,7 +172,7 @@ export function planOrganization(snapshot, rules = []) {
   return plan;
 }
 
-function matches(rule, tab) {
+export function matchesRule(rule, tab) {
   const match = rule.match ?? {};
   const url = (tab.url ?? "").toLowerCase();
   const title = (tab.title ?? "").toLowerCase();
