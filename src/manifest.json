@@ -22,7 +22,19 @@
     "type": "module"
   },
   "action": {
-    "default_icon": "icons/toolbar.svg",
+    "default_icon": "icons/toolbar-dark.svg",
+    "theme_icons": [
+      {
+        "light": "icons/toolbar-light.svg",
+        "dark": "icons/toolbar-dark.svg",
+        "size": 16
+      },
+      {
+        "light": "icons/toolbar-light.svg",
+        "dark": "icons/toolbar-dark.svg",
+        "size": 32
+      }
+    ],
     "default_popup": "popup.html"
   },
   "options_ui": {
