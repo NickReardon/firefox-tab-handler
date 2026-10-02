@@ -3,6 +3,7 @@ import { createDebugLogger } from "./logger.js";
 const NO_GROUP = -1;
 const UNDO_KEY = "undoSnapshot";
 const UNDO_ANCHORS_KEY = "undoAnchorIds";
+const UNDO_LAYOUT_KEY = "undoAppliedLayout";
 
 export async function applyOrganization(api, snapshot, plan) {
   const log = await createDebugLogger(api);
@@ -20,6 +21,7 @@ export async function applyOrganization(api, snapshot, plan) {
   await api.storage.local.set({
     [UNDO_KEY]: snapshot,
     [UNDO_ANCHORS_KEY]: [],
+    [UNDO_LAYOUT_KEY]: null,
   });
   log("apply:undo-snapshot-stored", { capturedAt: snapshot.capturedAt });
 
@@ -139,6 +141,9 @@ export async function applyOrganization(api, snapshot, plan) {
     await api.windows.remove(windowId);
     log("apply:source-window-closed", { windowId });
   }
+  await api.storage.local.set({
+    [UNDO_LAYOUT_KEY]: await captureLayout(api, snapshot),
+  });
 
   const result = {
     movedGroups: plan.preservedGroups.filter((item) => item.requiresMove).length,
@@ -150,12 +155,13 @@ export async function applyOrganization(api, snapshot, plan) {
   return result;
 }
 
-export async function undoLastOrganization(api) {
+export async function undoLastOrganization(api, { confirmed = false } = {}) {
   const log = await createDebugLogger(api);
   const {
     [UNDO_KEY]: snapshot,
     [UNDO_ANCHORS_KEY]: applyAnchorIds = [],
-  } = await api.storage.local.get([UNDO_KEY, UNDO_ANCHORS_KEY]);
+    [UNDO_LAYOUT_KEY]: appliedLayout,
+  } = await api.storage.local.get([UNDO_KEY, UNDO_ANCHORS_KEY, UNDO_LAYOUT_KEY]);
 
   if (!snapshot) {
     log("undo:unavailable");
@@ -165,6 +171,19 @@ export async function undoLastOrganization(api) {
       unchangedTabs: 0,
       unchangedGroups: 0,
       warnings: ["No undo is available."],
+    };
+  }
+
+  // A missing layout means apply failed partway, so undo runs as recovery without asking.
+  if (
+    !confirmed &&
+    appliedLayout &&
+    JSON.stringify(await captureLayout(api, snapshot)) !== JSON.stringify(appliedLayout)
+  ) {
+    log("undo:confirmation-required");
+    return {
+      needsConfirmation: true,
+      message: "Tabs changed since the last action. Undo may revert those changes.",
     };
   }
 
@@ -451,7 +470,7 @@ export async function undoLastOrganization(api) {
     log("undo:focused-window-restored", { windowId: focusedWindowId });
   }
 
-  await api.storage.local.remove([UNDO_KEY, UNDO_ANCHORS_KEY]);
+  await api.storage.local.remove([UNDO_KEY, UNDO_ANCHORS_KEY, UNDO_LAYOUT_KEY]);
 
   const result = {
     restoredTabs,
@@ -467,6 +486,24 @@ export async function undoLastOrganization(api) {
 export async function hasUndoSnapshot(api) {
   const { [UNDO_KEY]: snapshot } = await api.storage.local.get(UNDO_KEY);
   return Boolean(snapshot);
+}
+
+// Records window, group, pin state, and relative order of the snapshot's tabs.
+// Tabs opened later are ignored, so new tabs alone do not require confirmation.
+async function captureLayout(api, snapshot) {
+  const trackedIds = new Set(snapshot.windows.flatMap((window) => window.tabs.map((tab) => tab.id)));
+  const liveTabs = (await api.tabs.query({}))
+    .filter((tab) => trackedIds.has(tab.id))
+    .sort((a, b) => a.windowId - b.windowId || a.index - b.index);
+
+  const liveIds = new Set(liveTabs.map((tab) => tab.id));
+
+  return {
+    missingTabIds: [...trackedIds]
+      .filter((id) => !liveIds.has(id))
+      .sort((a, b) => a - b),
+    tabs: liveTabs.map((tab) => [tab.id, tab.windowId, tab.groupId, Boolean(tab.pinned)]),
+  };
 }
 
 function movedSourceWindowIds(plan) {

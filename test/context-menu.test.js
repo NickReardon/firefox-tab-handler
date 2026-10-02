@@ -3,7 +3,7 @@ import test from "node:test";
 
 import {
   CONTEXT_FULL_PREVIEW_MENU_ID,
-  CONTEXT_PREVIEW_MENU_ID,
+  CONTEXT_AUTO_SORT_MENU_ID,
   handleContextMenuClick,
   refreshContextMenu,
   registerContextMenu,
@@ -82,7 +82,7 @@ test("shows all matching rules for one tab", async () => {
   await refreshContextMenu(api, tab);
 
   assert.ok(calls.some((call) => call[0] === "update" &&
-    call[1] === CONTEXT_PREVIEW_MENU_ID &&
+    call[1] === CONTEXT_AUTO_SORT_MENU_ID &&
     call[2].title === "Auto-sort into Work"));
   assert.deepEqual(
     calls.filter(([type]) => type === "create")
@@ -119,7 +119,7 @@ test("offers a grouped tab only its other matching groups", async () => {
     ["Move tab into Docs"],
   );
   assert.ok(calls.some((call) => call[0] === "update" &&
-    call[1] === CONTEXT_PREVIEW_MENU_ID && call[2].visible === false));
+    call[1] === CONTEXT_AUTO_SORT_MENU_ID && call[2].visible === false));
 });
 
 test("counts overlapping matches and unmatched tabs for a selection", async () => {
@@ -196,7 +196,7 @@ test("directly applies auto-sort and explicit group actions", async () => {
   assert.deepEqual(
     await handleContextMenuClick(
       auto.api,
-      { menuItemId: CONTEXT_PREVIEW_MENU_ID },
+      { menuItemId: CONTEXT_AUTO_SORT_MENU_ID },
       tabs[0],
       async (scope) => {
         autoScope = scope;

@@ -152,9 +152,13 @@ async function loadPreview() {
       }
     });
 
+    let undoConfirmed = false;
+
     applyButton.addEventListener("click", async () => {
       applyButton.disabled = true;
       undoButton.disabled = true;
+      undoConfirmed = false;
+      undoButton.textContent = "Undo last apply";
       result.textContent = "Applying plan...";
 
       try {
@@ -179,7 +183,22 @@ async function loadPreview() {
       result.textContent = "Restoring the previous layout...";
 
       try {
-        const undone = await browser.runtime.sendMessage({ type: "planner:undo" });
+        const undone = await browser.runtime.sendMessage({
+          type: "planner:undo",
+          confirmed: undoConfirmed,
+        });
+
+        // Popups cannot use window.confirm, so the second click confirms.
+        if (undone.needsConfirmation) {
+          undoConfirmed = true;
+          undoButton.textContent = "Undo anyway";
+          undoButton.disabled = false;
+          applyButton.disabled = false;
+          result.setAttribute("role", "alert");
+          result.textContent = undone.message;
+          return;
+        }
+
         const warningText = undone.warnings.length
           ? ` ${undone.warnings.join(" ")}`
           : "";

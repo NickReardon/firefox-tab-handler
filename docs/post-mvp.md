@@ -9,6 +9,7 @@
 - Registrable-domain grouping.
 - Rebuild mode that intentionally discards existing groups.
 - Rule import and export beyond the MVP JSON format.
+- Per-tab undo that skips tabs moved, regrouped, or pinned since apply, replacing the two-click confirmation.
 
 ## Gate for LLM integration
 

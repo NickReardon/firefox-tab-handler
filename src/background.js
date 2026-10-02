@@ -26,7 +26,7 @@ export function handleBackgroundMessage(api, message) {
     case "planner:apply":
       return applyCurrentPlan(api, message.plan);
     case "planner:undo":
-      return undoCurrentPlan(api);
+      return undoCurrentPlan(api, message.confirmed === true);
     case "planner:undo-available":
       return hasUndoSnapshot(api);
     case "logging:get":
@@ -116,24 +116,33 @@ async function applyCurrentPlan(api, approvedPlan) {
   }
 }
 
+// Context actions apply without a preview because they touch only the selected
+// tabs in one window. The full sort always goes through the popup preview.
 async function applyContextScope(api, scope) {
-  const [snapshot, rules] = await Promise.all([
-    snapshotBrowser(api),
-    getRules(api),
-  ]);
-  const { snapshot: applySnapshot, plan } = buildCurrentPlan(
-    snapshot,
-    rules,
-    scope,
-  );
-  return applyOrganization(api, applySnapshot, plan);
-}
-
-async function undoCurrentPlan(api) {
   const log = await createDebugLogger(api);
 
   try {
-    return await undoLastOrganization(api);
+    const [snapshot, rules] = await Promise.all([
+      snapshotBrowser(api),
+      getRules(api),
+    ]);
+    const { snapshot: applySnapshot, plan } = buildCurrentPlan(
+      snapshot,
+      rules,
+      scope,
+    );
+    return await applyOrganization(api, applySnapshot, plan);
+  } catch (error) {
+    log("apply:failed", { message: error.message, scoped: true });
+    throw error;
+  }
+}
+
+async function undoCurrentPlan(api, confirmed) {
+  const log = await createDebugLogger(api);
+
+  try {
+    return await undoLastOrganization(api, { confirmed });
   } catch (error) {
     log("undo:failed", { message: error.message });
     throw error;

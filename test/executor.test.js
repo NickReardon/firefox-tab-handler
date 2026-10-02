@@ -180,6 +180,56 @@ test("rejects a stale plan before mutation", async () => {
   assert.equal(stored, false);
 });
 
+test("undo asks for confirmation only when tracked tabs changed after apply", async () => {
+  const snapshot = {
+    focusedWindowId: 1,
+    windows: [{
+      id: 1,
+      tabs: [
+        { id: 10, windowId: 1, index: 0, pinned: false, groupId: -1 },
+        { id: 11, windowId: 1, index: 1, pinned: false, groupId: -1 },
+      ],
+      groups: [],
+    }],
+  };
+  const liveTabs = [
+    { id: 10, windowId: 1, index: 0, pinned: false, groupId: 40 },
+    { id: 11, windowId: 1, index: 1, pinned: false, groupId: 40 },
+  ];
+  const appliedLayout = {
+    missingTabIds: [],
+    tabs: [[10, 1, 40, false], [11, 1, 40, false]],
+  };
+  const api = {
+    storage: {
+      local: {
+        get: async () => ({ undoSnapshot: snapshot, undoAppliedLayout: appliedLayout }),
+        remove: () => assert.fail("a pending confirmation must keep the undo snapshot"),
+      },
+    },
+    windows: {
+      get: async () => { throw new Error("window lookup"); },
+      create: async () => { throw new Error("undo proceeded"); },
+    },
+    tabs: { query: async () => liveTabs },
+  };
+
+  liveTabs.push({ id: 99, windowId: 1, index: 0, pinned: false, groupId: -1 });
+  liveTabs[0].index = 1;
+  liveTabs[1].index = 2;
+  await assert.rejects(
+    () => undoLastOrganization(api),
+    /undo proceeded/,
+    "new tabs alone must not require confirmation",
+  );
+
+  liveTabs[0].index = 3;
+  const result = await undoLastOrganization(api);
+
+  assert.equal(result.needsConfirmation, true);
+  assert.match(result.message, /Tabs changed since the last action/);
+});
+
 test("undo recreates source windows and reports disappeared tabs", async () => {
   const snapshot = {
     focusedWindowId: 1,
