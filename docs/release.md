@@ -2,8 +2,8 @@
 
 ## Current boundary
 
-Version `0.1.0` is an unsigned development build. `pnpm run build` produces
-`web-ext-artifacts/firefox_tab_organizer-0.1.0.zip` for inspection and Mozilla
+Version `0.2.0` is an unsigned development build. `pnpm run build` produces
+`web-ext-artifacts/firefox_tab_organizer-0.2.0.zip` for inspection and Mozilla
 submission. Firefox Release and Beta require Mozilla-signed extensions for
 permanent installation. See Mozilla's [signing and distribution overview](https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/).
 
