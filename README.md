@@ -52,6 +52,11 @@ undo may revert those changes and asks for a second click to proceed.
 Rule configurations can be exported and imported from the options page. Import
 shows added, changed, and removed rules before replacing saved rules.
 
+[`examples/starter-rules.json`](examples/starter-rules.json) is a
+general-purpose starting set covering communication, AI, docs, development,
+research, school, gaming, media, social, news, and shopping sites. Importing it
+replaces all saved rules, so export yours first to keep them.
+
 The popup exports a local tab inventory. Query strings and fragments are
 removed by default; including them requires the explicit full-URL checkbox.
 
