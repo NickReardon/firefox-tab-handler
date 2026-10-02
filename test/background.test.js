@@ -70,6 +70,10 @@ test("builds a preview without exposing mutation messages", async () => {
     await handleBackgroundMessage(api, { type: "planner:undo-available" }),
     true,
   );
+  assert.deepEqual(stored.undoAppliedLayout, {
+    missingTabIds: [],
+    tabs: [[10, 1, -1, false]],
+  });
   assert.equal(await handleBackgroundMessage(api, { type: "logging:get" }), false);
   assert.equal(
     await handleBackgroundMessage(api, { type: "logging:set", enabled: true }),

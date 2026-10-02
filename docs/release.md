@@ -41,6 +41,8 @@ Use disposable test tabs in a temporary Firefox profile:
 7. Export a tab inventory without full URLs and confirm credentials, query strings, and fragments are absent.
 8. Enable full URLs and confirm query strings and fragments appear while credentials remain absent.
 9. Enable detailed logging and confirm logs contain stages, IDs, and counts but no titles or URLs.
+10. Right-click one tab and a multi-tab selection. Confirm auto-sort and per-rule moves affect only the selected tabs, and that undo reverts them.
+11. Apply, then move a tracked tab. Confirm undo warns and only proceeds on the second click. Apply again and open only new tabs, then confirm undo proceeds without a warning.
 
 ## Signing and distribution
 

@@ -27,6 +27,28 @@ and other exact-name groups join it, retaining its color and collapsed state.
 After Apply, pinned tabs remain first, groups follow, and unmatched unpinned
 tabs are placed last in their preserved window and tab order.
 
+## Tab context menu
+
+Right-click a tab, or a selection of tabs, for quick actions:
+
+- **Auto-sort into groups** groups the selected loose tabs by their first
+  matching rule.
+- **Move tab into X** moves the selected tabs that match rule X into that
+  group, including tabs from other groups.
+- **Preview full plan** opens the popup.
+
+Context actions apply immediately because they touch only the selected tabs in
+one window. The full organization always shows a preview first.
+
+## Undo
+
+Undo reverts the last action only, whether it came from the popup or the
+context menu. It restores the layout captured before that action. If tabs it
+tracks were moved, grouped, pinned, or closed afterward, the popup warns that
+undo may revert those changes and asks for a second click to proceed.
+
+## Import and export
+
 Rule configurations can be exported and imported from the options page. Import
 shows added, changed, and removed rules before replacing saved rules.
 
@@ -59,8 +81,8 @@ not include tab titles or URLs.
 ## Privacy and permissions
 
 The extension runs locally and makes no network requests. It uses `tabs` and
-`tabGroups` to preview and apply organization, and `storage` for rules, logging
-preference, and one undo snapshot. Private browsing is disabled.
+`tabGroups` to preview and apply organization, `menus` for the tab context menu, and
+`storage` for rules, logging preference, and one undo snapshot. Private browsing is disabled.
 
 Tab titles and URLs remain inside Firefox unless the user explicitly downloads
 a tab inventory. Inventory URLs omit credentials, query strings, and fragments

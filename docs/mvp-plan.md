@@ -144,6 +144,35 @@ Status: accepted on 2026-09-01.
 - Apply places pinned tabs first, groups next, and unmatched unpinned tabs last while preserving their window and tab order.
 - `web-ext lint` reports zero errors and one Android-only minimum-version warning; a clean desktop build succeeds.
 
+## Post-milestone additions
+
+### Rule editor and summary popup
+
+The options page edits rules in place, and the popup leads with a count
+summary while plan details sit behind a disclosure.
+
+### Tab context actions
+
+Right-clicking tabs offers auto-sort by first matching rule, per-rule moves,
+and a link to the full preview.
+
+Decision: context actions apply without a preview. They touch only the
+selected tabs in one window, and undo covers them. The full organization
+always goes through the popup preview.
+
+### Undo scope
+
+Undo holds one snapshot: the last action, from either the popup or the
+context menu. A multi-step history was rejected because each step restores
+a captured layout, so undoing an older step would also revert any manual
+changes made after it.
+
+After apply, the extension records the window, group, pin state, and
+relative order of the affected tabs. If that layout changed before undo, the
+popup warns and requires a second click. Tabs opened after apply are not
+tracked, so new tabs alone do not trigger the warning. If apply failed
+partway, no layout is recorded and undo runs without asking, as recovery.
+
 ## Definition of done
 
 - Preview and apply safe cross-window consolidation.

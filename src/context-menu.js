@@ -2,7 +2,7 @@ import { matchesRule } from "./planner.js";
 import { getRules } from "./rules.js";
 
 export const CONTEXT_FULL_PREVIEW_MENU_ID = "preview-full-plan";
-export const CONTEXT_PREVIEW_MENU_ID = "preview-auto-sort";
+export const CONTEXT_AUTO_SORT_MENU_ID = "auto-sort-selected";
 export const CONTEXT_NO_MATCH_MENU_ID = "no-matching-rule";
 const FIRST_SEPARATOR_ID = "tab-organizer-separator-1";
 const SECOND_SEPARATOR_ID = "tab-organizer-separator-2";
@@ -27,7 +27,7 @@ export async function registerContextMenu(api) {
       contexts: ["tab"],
     },
     {
-      id: CONTEXT_PREVIEW_MENU_ID,
+      id: CONTEXT_AUTO_SORT_MENU_ID,
       title: "Auto-sort into groups",
       contexts: ["tab"],
       visible: false,
@@ -82,7 +82,7 @@ export async function refreshContextMenu(api, clickedTab) {
   await Promise.all([
     ...dynamicRuleMenuIds.map((id) => api.menus.remove(id).catch(() => {})),
     api.menus.update(FIRST_SEPARATOR_ID, { visible: autoTabs.length > 0 }),
-    api.menus.update(CONTEXT_PREVIEW_MENU_ID, {
+    api.menus.update(CONTEXT_AUTO_SORT_MENU_ID, {
       title: single
         ? `Auto-sort into ${firstMatch?.name ?? "group"}`
         : "Auto-sort into groups",
@@ -129,7 +129,7 @@ export async function handleContextMenuClick(api, info, clickedTab, applyScope) 
     return undefined;
   }
   if (
-    info.menuItemId !== CONTEXT_PREVIEW_MENU_ID &&
+    info.menuItemId !== CONTEXT_AUTO_SORT_MENU_ID &&
     !String(info.menuItemId).startsWith(RULE_MENU_PREFIX)
   ) {
     return undefined;
