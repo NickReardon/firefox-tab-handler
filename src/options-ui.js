@@ -10,10 +10,31 @@ export function summarizeRule(rule) {
     ["Titles", rule.match.titleIncludes],
   ]) {
     if (values.length) {
-      parts.push(`${label}: ${values.join(", ")}`);
+      parts.push(`${label}: ${shortList(values)}`);
     }
   }
+
+  const excluded = excludeValues(rule);
+  if (excluded.length) {
+    parts.push(`Not: ${shortList(excluded)}`);
+  }
   return parts.join(" · ") || "No matchers";
+}
+
+const SUMMARY_LIMIT = 3;
+
+function shortList(values) {
+  const shown = values.slice(0, SUMMARY_LIMIT).join(", ");
+  const hidden = values.length - SUMMARY_LIMIT;
+  return hidden > 0 ? `${shown}, +${hidden} more` : shown;
+}
+
+export function excludeValues(rule) {
+  return [
+    ...(rule.exclude?.hostnames ?? []),
+    ...(rule.exclude?.urlIncludes ?? []),
+    ...(rule.exclude?.titleIncludes ?? []),
+  ];
 }
 
 export function setRuleCollapsed(row, collapsed) {

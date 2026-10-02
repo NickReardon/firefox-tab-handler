@@ -51,4 +51,11 @@ test("summarizes populated rule fields on one line", () => {
       titleIncludes: ["Docs"],
     },
   }), "Hosts: example.com · Titles: Docs");
+  assert.equal(summarizeRule({
+    match: { hostnames: [], urlIncludes: [], titleIncludes: ["unreal engine"] },
+    exclude: { hostnames: ["mail.google.com"], urlIncludes: [], titleIncludes: ["newsletter"] },
+  }), "Titles: unreal engine · Not: mail.google.com, newsletter");
+  assert.equal(summarizeRule({
+    match: { hostnames: ["a", "b", "c", "d", "e"], urlIncludes: [], titleIncludes: [] },
+  }), "Hosts: a, b, c, +2 more");
 });

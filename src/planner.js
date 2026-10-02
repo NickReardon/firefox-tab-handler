@@ -172,8 +172,9 @@ export function planOrganization(snapshot, rules = [], { tabIds, ruleId } = {}) 
   return plan;
 }
 
+// A rule matches when any include matcher hits and no exclude matcher does. An
+// excluded tab falls through to the next rule.
 export function matchesRule(rule, tab) {
-  const match = rule.match ?? {};
   const url = (tab.url ?? "").toLowerCase();
   const title = (tab.title ?? "").toLowerCase();
   let hostname = "";
@@ -184,9 +185,10 @@ export function matchesRule(rule, tab) {
     // Non-URL browser pages can still match URL or title text.
   }
 
-  return (
-    (match.hostnames ?? []).some((value) => value.toLowerCase() === hostname) ||
-    (match.urlIncludes ?? []).some((value) => url.includes(value.toLowerCase())) ||
-    (match.titleIncludes ?? []).some((value) => title.includes(value.toLowerCase()))
-  );
+  const hits = (matchers = {}) =>
+    (matchers.hostnames ?? []).some((value) => value.toLowerCase() === hostname) ||
+    (matchers.urlIncludes ?? []).some((value) => url.includes(value.toLowerCase())) ||
+    (matchers.titleIncludes ?? []).some((value) => title.includes(value.toLowerCase()));
+
+  return hits(rule.match) && !hits(rule.exclude);
 }

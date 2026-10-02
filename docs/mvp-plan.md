@@ -173,6 +173,24 @@ popup warns and requires a second click. Tabs opened after apply are not
 tracked, so new tabs alone do not trigger the warning. If apply failed
 partway, no layout is recorded and undo runs without asking, as recovery.
 
+### Default and custom rules
+
+The extension ships a read-only default rule set in `src/default-rules.js`. It
+applies only while the `rules` storage key is absent. Any saved custom set,
+including an empty one, replaces the defaults entirely.
+
+Decision: defaults and custom rules are never combined. Layering them would
+interleave two orderings and let extension updates silently change how a
+customized user's tabs group. Users can still copy any default group into
+their set, and reverting deletes the custom set after a confirmation.
+
+### Rule exclusions and config version 2
+
+Each rule has optional exclusions with the same matcher types. A rule matches
+when any include matcher hits and no exclude matcher does, and an excluded tab
+falls through to the next rule. Exported configs are version 2. Import accepts
+version 1 and 2, and rejects `exclude` in a version 1 file.
+
 ## Definition of done
 
 - Preview and apply safe cross-window consolidation.

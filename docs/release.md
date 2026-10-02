@@ -43,6 +43,9 @@ Use disposable test tabs in a temporary Firefox profile:
 9. Enable detailed logging and confirm logs contain stages, IDs, and counts but no titles or URLs.
 10. Right-click one tab and a multi-tab selection. Confirm auto-sort and per-rule moves affect only the selected tabs, and that undo reverts them.
 11. Apply, then move a tracked tab. Confirm undo warns and only proceeds on the second click. Apply again and open only new tabs, then confirm undo proceeds without a warning.
+12. With a fresh profile, confirm the options page shows the defaults read-only and Apply uses them. Copy defaults, edit one rule, save, and confirm defaults no longer apply. Copy one default group back in, then cancel and confirm a revert before accepting one.
+13. Add a **Don't include** hostname to a title rule and confirm a matching tab on that host lands in the next matching group instead.
+14. Check the toolbar icon on a light and a dark theme.
 
 ## Signing and distribution
 
