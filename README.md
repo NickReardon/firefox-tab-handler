@@ -55,7 +55,10 @@ shows added, changed, and removed rules before replacing saved rules.
 [`examples/starter-rules.json`](examples/starter-rules.json) is a
 general-purpose starting set covering communication, AI, docs, development,
 research, school, gaming, media, social, news, and shopping sites. Importing it
-replaces all saved rules, so export yours first to keep them.
+replaces all saved rules, so export yours first to keep them. Its order is
+app sites (mail, chat, docs) first, then topic title keywords, then content
+sites, so a topic such as `unreal engine` wins over YouTube or Reddit but not
+over Gmail. Rules with the same name share one group.
 
 The popup exports a local tab inventory. Query strings and fragments are
 removed by default; including them requires the explicit full-URL checkbox.
