@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { planOrganization } from "../src/planner.js";
+import { matchesRule, planOrganization } from "../src/planner.js";
 
 const snapshot = {
   focusedWindowId: 1,
@@ -115,6 +115,31 @@ test("uses the first matching rule", () => {
   assert.deepEqual(plan.newGroups.map(({ ruleId, tabMoves }) => [ruleId, tabMoves.map(({ tabId }) => tabId)]), [
     ["epic", [22, 23]],
   ]);
+});
+
+test("an excluded tab falls through to the next matching rule", () => {
+  const gmail = {
+    url: "https://mail.google.com/mail/u/0/",
+    title: "Unreal Engine newsletter",
+  };
+  const unreal = {
+    id: "unreal",
+    name: "Development",
+    color: "green",
+    match: { titleIncludes: ["unreal engine"] },
+    exclude: { hostnames: ["mail.google.com"] },
+  };
+  const mail = {
+    id: "mail",
+    name: "Communication",
+    color: "cyan",
+    match: { hostnames: ["mail.google.com"] },
+  };
+
+  assert.equal(matchesRule(unreal, gmail), false);
+  assert.equal(matchesRule(unreal, { ...gmail, url: "https://www.youtube.com/" }), true);
+  assert.equal(matchesRule({ ...unreal, exclude: {} }, gmail), true);
+  assert.equal([unreal, mail].find((rule) => matchesRule(rule, gmail)), mail);
 });
 
 test("scoped planning can select a later matching rule", () => {

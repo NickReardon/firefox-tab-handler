@@ -13,10 +13,18 @@
           <h1>Organization rules</h1>
         </div>
         <p>Rules run from top to bottom. The first matching rule wins.</p>
+        <div class="mode-banner">
+          <p id="mode-text"></p>
+          <div class="actions">
+            <button id="copy-defaults" type="button" hidden>Copy defaults to my rules</button>
+            <button id="start-empty" type="button" hidden>Start empty</button>
+            <button id="revert-defaults" class="danger" type="button" hidden>Revert to defaults</button>
+          </div>
+        </div>
         <div class="options-rule-actions">
           <div class="actions">
-            <button id="add-rule" type="button">Add rule</button>
-            <button id="save-rules" type="button">Save rules</button>
+            <button id="add-rule" type="button" hidden>Add rule</button>
+            <button id="save-rules" type="button" hidden>Save rules</button>
             <button id="export-rules" type="button">Export rules</button>
           </div>
           <p id="status" role="status"></p>
@@ -40,6 +48,14 @@
       </header>
       <div class="options-content">
         <ol id="rules"></ol>
+        <section id="default-groups" aria-labelledby="default-groups-heading" hidden>
+          <h2 id="default-groups-heading">Default groups</h2>
+          <p>
+            Copy a group into your rules. Copies go to the end of your list and
+            stay unsaved until you save. Rules you already have are skipped.
+          </p>
+          <ul id="default-group-list"></ul>
+        </section>
       </div>
     </main>
 
@@ -69,6 +85,12 @@
           <label>Hostnames, one per line <textarea class="rule-hostnames"></textarea></label>
           <label>URL text, one per line <textarea class="rule-urls"></textarea></label>
           <label>Title text, one per line <textarea class="rule-titles"></textarea></label>
+          <details class="rule-exclude">
+            <summary>Don't include (<span class="exclude-count">0</span>)</summary>
+            <label>Hostnames, one per line <textarea class="rule-exclude-hostnames"></textarea></label>
+            <label>URL text, one per line <textarea class="rule-exclude-urls"></textarea></label>
+            <label>Title text, one per line <textarea class="rule-exclude-titles"></textarea></label>
+          </details>
         </div>
         <div class="rule-footer">
           <small class="rule-condensed"></small>

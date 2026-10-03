@@ -24,8 +24,28 @@ the first match wins. Each rule assigns loose, unpinned tabs to a native group
 by exact hostname, URL text, or title text. Existing groups remain intact.
 If the destination already has a group with the exact rule name, matching tabs
 and other exact-name groups join it, retaining its color and collapsed state.
+Rules with the same name share one group.
 After Apply, pinned tabs remain first, groups follow, and unmatched unpinned
 tabs are placed last in their preserved window and tab order.
+
+Each rule can also list **Don't include** hostnames, URL text, or title text.
+A tab that matches an exclusion skips that rule and moves on to the next one,
+so a title rule for `unreal engine` can exclude `mail.google.com` and leave
+newsletters in the mail group.
+
+### Default and custom rules
+
+The extension ships a default rule set covering communication, docs, AI,
+development, research, school, gaming, media, social, news, and shopping
+sites. Its order is app sites (mail, chat, docs) first, then topic title
+phrases, then content sites, so a topic such as `unreal engine` wins over
+YouTube or Reddit but not over Gmail.
+
+Defaults apply until you make your own set, either by copying the defaults or
+by starting empty. Once you have a custom set, defaults are ignored entirely
+and extension updates never change your rules. From your set you can copy any
+default group back in, or revert to defaults, which deletes your set after a
+confirmation.
 
 ## Tab context menu
 
@@ -50,7 +70,9 @@ undo may revert those changes and asks for a second click to proceed.
 ## Import and export
 
 Rule configurations can be exported and imported from the options page. Import
-shows added, changed, and removed rules before replacing saved rules.
+shows added, changed, and removed rules before replacing saved rules, and an
+import always creates or replaces your custom set. Exports use config version
+2, which adds exclusions. Version 1 files still import.
 
 The popup exports a local tab inventory. Query strings and fragments are
 removed by default; including them requires the explicit full-URL checkbox.

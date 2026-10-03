@@ -1,6 +1,10 @@
 import { validateRules } from "./rules.js";
 
-const CONFIG_VERSION = 1;
+// Version 2 adds optional per-rule exclusions. Version 1 configs still import.
+const CONFIG_VERSION = 2;
+const SUPPORTED_CONFIG_VERSIONS = [1, 2];
+const INVENTORY_VERSION = 1;
+const MATCHER_KEYS = ["hostnames", "urlIncludes", "titleIncludes"];
 
 export function createRuleConfig(rules) {
   return { version: CONFIG_VERSION, rules: validateRules(rules) };
@@ -17,7 +21,7 @@ export function parseRuleConfig(text) {
 
   requireObject(config, "Rule config");
   requireKeys(config, ["version", "rules"], ["version", "rules"], "Rule config");
-  if (config.version !== CONFIG_VERSION) {
+  if (!SUPPORTED_CONFIG_VERSIONS.includes(config.version)) {
     throw new Error(`Unsupported rule config version ${config.version}.`);
   }
   if (!Array.isArray(config.rules)) {
@@ -27,14 +31,19 @@ export function parseRuleConfig(text) {
   for (const [index, rule] of config.rules.entries()) {
     const label = `Rule ${index + 1}`;
     requireObject(rule, label);
-    requireKeys(rule, ["id", "name", "color", "match"], ["id", "name", "color", "match"], label);
-    requireObject(rule.match, `${label} match`);
+    const required = ["id", "name", "color", "match"];
     requireKeys(
-      rule.match,
-      ["hostnames", "urlIncludes", "titleIncludes"],
-      [],
-      `${label} match`,
+      rule,
+      config.version >= 2 ? [...required, "exclude"] : required,
+      required,
+      label,
     );
+    requireObject(rule.match, `${label} match`);
+    requireKeys(rule.match, MATCHER_KEYS, [], `${label} match`);
+    if (rule.exclude !== undefined) {
+      requireObject(rule.exclude, `${label} exclude`);
+      requireKeys(rule.exclude, MATCHER_KEYS, [], `${label} exclude`);
+    }
   }
 
   return createRuleConfig(config.rules);
@@ -70,7 +79,7 @@ export function buildTabInventory(
   const selected = windowIds ? new Set(windowIds) : null;
 
   return {
-    version: CONFIG_VERSION,
+    version: INVENTORY_VERSION,
     capturedAt: snapshot.capturedAt,
     windows: (snapshot.windows ?? [])
       .filter((window) => !selected || selected.has(window.id))

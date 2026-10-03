@@ -23,9 +23,10 @@ test("round-trips a strict versioned rule config", () => {
     () => parseRuleConfig(JSON.stringify({ ...config, extra: true })),
     /unknown field extra/,
   );
+  assert.equal(config.version, 2);
   assert.throws(
-    () => parseRuleConfig(JSON.stringify({ ...config, version: 2 })),
-    /Unsupported rule config version 2/,
+    () => parseRuleConfig(JSON.stringify({ ...config, version: 3 })),
+    /Unsupported rule config version 3/,
   );
   assert.throws(
     () => parseRuleConfig(JSON.stringify({
@@ -33,6 +34,33 @@ test("round-trips a strict versioned rule config", () => {
       rules: [{ ...rule, match: { ...rule.match, typo: [] } }],
     })),
     /unknown field typo/,
+  );
+});
+
+test("imports version 1 configs and accepts exclusions only from version 2", () => {
+  const legacy = parseRuleConfig(JSON.stringify({ version: 1, rules: [rule] }));
+  assert.deepEqual(legacy.rules[0].exclude, {
+    hostnames: [],
+    urlIncludes: [],
+    titleIncludes: [],
+  });
+
+  const excluded = { ...rule, exclude: { hostnames: ["mail.google.com"] } };
+  assert.throws(
+    () => parseRuleConfig(JSON.stringify({ version: 1, rules: [excluded] })),
+    /unknown field exclude/,
+  );
+  assert.deepEqual(
+    parseRuleConfig(JSON.stringify({ version: 2, rules: [excluded] })).rules[0].exclude
+      .hostnames,
+    ["mail.google.com"],
+  );
+  assert.throws(
+    () => parseRuleConfig(JSON.stringify({
+      version: 2,
+      rules: [{ ...rule, exclude: { typo: [] } }],
+    })),
+    /exclude has unknown field typo/,
   );
 });
 
