@@ -77,21 +77,6 @@ import always creates or replaces your custom set. Exports use config version
 The popup exports a local tab inventory. Query strings and fragments are
 removed by default; including them requires the explicit full-URL checkbox.
 
-## API spike
-
-Load `src` as a temporary add-on, open its background console, then inspect or
-move one item with:
-
-```js
-window.spike = await import(browser.runtime.getURL("spike.js"));
-await window.spike.snapshotBrowser(browser);
-await window.spike.moveLooseTab(browser, tabId, destinationWindowId);
-await window.spike.moveExistingGroup(browser, groupId, destinationWindowId);
-```
-
-Use IDs from the snapshot. Test moves only from source windows that contain a
-tab outside the item being moved so Firefox does not close the source window.
-
 ## Debug logging
 
 Use the **Detailed background logging** checkbox in the extension popup. The

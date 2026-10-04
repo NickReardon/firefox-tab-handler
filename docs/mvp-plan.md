@@ -191,6 +191,12 @@ when any include matcher hits and no exclude matcher does, and an excluded tab
 falls through to the next rule. Exported configs are version 2. Import accepts
 version 1 and 2, and rejects `exclude` in a version 1 file.
 
+### Spike helpers removed
+
+The Milestone 1 mutation helpers and their console workflow were removed once
+the executor superseded them. `snapshotBrowser` moved to `src/snapshot.js`, so
+the release package ships only code the extension calls.
+
 ## Definition of done
 
 - Preview and apply safe cross-window consolidation.

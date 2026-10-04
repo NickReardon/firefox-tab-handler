@@ -17,7 +17,7 @@ import {
 import { planOrganization } from "./planner.js";
 import { buildTabInventory } from "./portable.js";
 import { getRules } from "./rules.js";
-import { snapshotBrowser } from "./spike.js";
+import { snapshotBrowser } from "./snapshot.js";
 
 export function handleBackgroundMessage(api, message) {
   switch (message?.type) {
