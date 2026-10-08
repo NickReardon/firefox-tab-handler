@@ -26,7 +26,7 @@ export function handleBackgroundMessage(api, message) {
     case "planner:apply":
       return applyCurrentPlan(api, message.plan);
     case "planner:undo":
-      return undoCurrentPlan(api, message.confirmed === true);
+      return undoCurrentPlan(api);
     case "planner:undo-available":
       return hasUndoSnapshot(api);
     case "logging:get":
@@ -138,11 +138,11 @@ async function applyContextScope(api, scope) {
   }
 }
 
-async function undoCurrentPlan(api, confirmed) {
+async function undoCurrentPlan(api) {
   const log = await createDebugLogger(api);
 
   try {
-    return await undoLastOrganization(api, { confirmed });
+    return await undoLastOrganization(api);
   } catch (error) {
     log("undo:failed", { message: error.message });
     throw error;

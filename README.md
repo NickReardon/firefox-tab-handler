@@ -63,9 +63,11 @@ one window. The full organization always shows a preview first.
 ## Undo
 
 Undo reverts the last action only, whether it came from the popup or the
-context menu. It restores the layout captured before that action. If tabs it
-tracks were moved, grouped, pinned, or closed afterward, the popup warns that
-undo may revert those changes and asks for a second click to proceed.
+context menu. It restores the layout captured before that action, except for
+tabs you moved to another window or group, pinned or unpinned, or closed
+afterward. Those stay where you put them, and the popup reports how many were
+skipped. Undo does not track reordering within a group, so it restores the
+original order there. Tabs opened after the action stay with their group.
 
 ## Import and export
 
