@@ -205,6 +205,6 @@ the release package ships only code the extension calls.
 - Provide one immediate best-effort undo.
 - Import and export validated rule configurations.
 - Export a sanitized tab inventory.
-- Request only the permissions needed for tabs, tab groups, and local storage, with private browsing disabled.
+- Request only the permissions needed for tabs, tab groups, the tab context menu, and local storage, with private browsing disabled.
 - Cover the pure planner with fixtures for mixed windows, pinned tabs, existing groups, duplicate rule matches, and disappearing tabs.
 - Pass `web-ext lint` and a manual Firefox test-profile validation.
