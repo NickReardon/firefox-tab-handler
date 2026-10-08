@@ -11,6 +11,6 @@
     "run": "web-ext run --source-dir src"
   },
   "devDependencies": {
-    "web-ext": "^10.6.0"
+    "web-ext": "^10.7.0"
   }
 }

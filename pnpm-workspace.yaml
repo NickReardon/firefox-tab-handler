@@ -1,2 +1,6 @@
 allowBuilds:
   spawn-sync: false
+overrides:
+  # fx-runner 1.6.0 (via web-ext) pins shell-quote 1.10.0, which has a quote()
+  # command injection advisory. Remove once web-ext ships a patched fx-runner.
+  shell-quote: ^1.11.0
