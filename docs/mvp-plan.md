@@ -167,11 +167,20 @@ context menu. A multi-step history was rejected because each step restores
 a captured layout, so undoing an older step would also revert any manual
 changes made after it.
 
-After apply, the extension records the window, group, pin state, and
-relative order of the affected tabs. If that layout changed before undo, the
-popup warns and requires a second click. Tabs opened after apply are not
-tracked, so new tabs alone do not trigger the warning. If apply failed
-partway, no layout is recorded and undo runs without asking, as recovery.
+After apply, the extension records the window, group, and pin state of the
+affected tabs. Undo skips any tab whose window, group, or pin state changed,
+or that was closed, and restores the rest. A source window is recreated only
+if at least one of its tabs is restorable, and the original active tab takes
+focus only if it was restored. Tabs opened after apply are not tracked. If
+apply failed partway, no layout is recorded and undo restores every tab, as
+recovery.
+
+Decision: per-tab undo replaced the earlier two-click confirmation, which
+could only restore everything or nothing. Tab order is not part of the
+per-tab check, because one drag shifts every later index and would flag
+untouched tabs. As a result, a reorder within the same window and group is
+reverted by undo. If that becomes a problem, compare each tab's preceding
+tracked neighbor instead.
 
 ### Default and custom rules
 

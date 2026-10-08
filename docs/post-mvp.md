@@ -4,7 +4,6 @@
 
 Deferred work is tracked in [GitHub issues](https://github.com/NickReardon/firefox-tab-handler/issues):
 
-- [#10](https://github.com/NickReardon/firefox-tab-handler/issues/10) Per-tab undo that skips tabs changed since apply.
 - [#11](https://github.com/NickReardon/firefox-tab-handler/issues/11) Registrable-domain grouping.
 - [#12](https://github.com/NickReardon/firefox-tab-handler/issues/12) Automatic organization of new tabs.
 - [#13](https://github.com/NickReardon/firefox-tab-handler/issues/13) Rebuild mode that discards existing groups.
