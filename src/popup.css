@@ -237,6 +237,10 @@ body.options main {
   margin-bottom: 0.5rem;
 }
 
+.rule label.setting {
+  display: block;
+}
+
 .rule textarea {
   min-height: 3rem;
   resize: vertical;

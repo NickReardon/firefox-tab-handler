@@ -18,7 +18,8 @@ export function summarizeRule(rule) {
   if (excluded.length) {
     parts.push(`Not: ${shortList(excluded)}`);
   }
-  return parts.join(" · ") || "No matchers";
+  const summary = parts.join(" · ") || "No matchers";
+  return rule.manualOnly ? `Possible match · ${summary}` : summary;
 }
 
 const SUMMARY_LIMIT = 3;

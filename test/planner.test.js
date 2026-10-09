@@ -237,6 +237,79 @@ test("targets an existing destination group with the exact rule name", () => {
   assert.equal(plan.newGroups[1].targetGroupId, undefined);
 });
 
+test("possible-match rules never sort automatically but can be chosen explicitly", () => {
+  const possible = {
+    id: "maybe-tethered",
+    name: "Tethered",
+    color: "red",
+    manualOnly: true,
+    match: { hostnames: ["dev.epicgames.com"] },
+  };
+  const withPossible = [possible, ...rules];
+
+  const plan = planOrganization(snapshot, withPossible, { tabIds: [23] });
+  assert.deepEqual(plan.newGroups.map(({ ruleId }) => ruleId), ["epic"]);
+
+  const onlyPossible = planOrganization(snapshot, [possible], { tabIds: [23] });
+  assert.deepEqual(onlyPossible.newGroups, []);
+  assert.deepEqual(onlyPossible.looseTabMoves.map(({ tabId }) => tabId), [23]);
+
+  const explicit = planOrganization(snapshot, withPossible, {
+    tabIds: [23],
+    ruleId: "maybe-tethered",
+  });
+  assert.deepEqual(explicit.newGroups.map(({ title, tabMoves }) => [
+    title,
+    tabMoves.map(({ tabId }) => tabId),
+  ]), [["Tethered", [23]]]);
+});
+
+test("scoped planning accepts tabs matching any same-name rule", () => {
+  const possible = {
+    id: "maybe-tethered",
+    name: "Tethered",
+    color: "red",
+    manualOnly: true,
+    match: { hostnames: ["dev.epicgames.com"] },
+  };
+
+  const plan = planOrganization(snapshot, [...rules, possible], {
+    tabIds: [22, 23],
+    ruleId: "tethered",
+  });
+
+  assert.deepEqual(
+    plan.newGroups[0].tabMoves.map(({ tabId }) => tabId),
+    [22, 23],
+  );
+});
+
+test("possible-match rule names still merge duplicate groups", () => {
+  const mergeSnapshot = structuredClone(snapshot);
+  mergeSnapshot.windows[0].tabs.push(
+    { id: 12, windowId: 1, index: 2, title: "One", url: "about:blank", groupId: 40 },
+    { id: 13, windowId: 1, index: 3, title: "Two", url: "about:blank", groupId: 41 },
+  );
+  mergeSnapshot.windows[0].groups.push(
+    { id: 40, title: "Gaming", color: "green", collapsed: false },
+    { id: 41, title: "Gaming", color: "yellow", collapsed: false },
+  );
+
+  const plan = planOrganization(mergeSnapshot, [{
+    id: "maybe-gaming",
+    name: "Gaming",
+    color: "green",
+    manualOnly: true,
+    match: { hostnames: ["www.youtube.com"] },
+  }]);
+
+  assert.deepEqual(plan.newGroups.map(({ targetGroupId, mergeGroupIds, tabMoves }) => [
+    targetGroupId,
+    mergeGroupIds,
+    tabMoves.length,
+  ]), [[40, [41], 0]]);
+});
+
 test("rejects a snapshot without an eligible focused destination", () => {
   assert.throws(
     () => planOrganization({ ...snapshot, focusedWindowId: 4 }, rules),

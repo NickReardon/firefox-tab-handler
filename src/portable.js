@@ -1,8 +1,9 @@
 import { validateRules } from "./rules.js";
 
-// Version 2 adds optional per-rule exclusions. Version 1 configs still import.
-const CONFIG_VERSION = 2;
-const SUPPORTED_CONFIG_VERSIONS = [1, 2];
+// Version 2 adds optional per-rule exclusions and version 3 adds optional
+// possible-match rules (manualOnly). Older configs still import.
+const CONFIG_VERSION = 3;
+const SUPPORTED_CONFIG_VERSIONS = [1, 2, 3];
 const INVENTORY_VERSION = 1;
 const MATCHER_KEYS = ["hostnames", "urlIncludes", "titleIncludes"];
 
@@ -32,12 +33,12 @@ export function parseRuleConfig(text) {
     const label = `Rule ${index + 1}`;
     requireObject(rule, label);
     const required = ["id", "name", "color", "match"];
-    requireKeys(
-      rule,
-      config.version >= 2 ? [...required, "exclude"] : required,
-      required,
-      label,
-    );
+    const allowed = [
+      ...required,
+      ...(config.version >= 2 ? ["exclude"] : []),
+      ...(config.version >= 3 ? ["manualOnly"] : []),
+    ];
+    requireKeys(rule, allowed, required, label);
     requireObject(rule.match, `${label} match`);
     requireKeys(rule.match, MATCHER_KEYS, [], `${label} match`);
     if (rule.exclude !== undefined) {

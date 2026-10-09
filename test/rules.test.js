@@ -22,6 +22,7 @@ const rules = [{
     titleIncludes: ["docs"],
   },
   exclude: { hostnames: [], urlIncludes: [], titleIncludes: [] },
+  manualOnly: false,
 }];
 
 function storageApi() {
@@ -109,6 +110,16 @@ test("normalizes optional exclusions and rejects malformed ones", () => {
   assert.throws(
     () => validateRules([{ ...rules[0], exclude: ["mail.google.com"] }]),
     /exclusions must be an object/,
+  );
+});
+
+test("defaults possible match to off and rejects non-boolean values", () => {
+  const { manualOnly, ...withoutFlag } = rules[0];
+  assert.equal(validateRules([withoutFlag])[0].manualOnly, manualOnly);
+  assert.equal(validateRules([{ ...rules[0], manualOnly: true }])[0].manualOnly, true);
+  assert.throws(
+    () => validateRules([{ ...rules[0], manualOnly: "yes" }]),
+    /possible match setting must be true or false/,
   );
 });
 

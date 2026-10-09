@@ -45,7 +45,8 @@ Use disposable test tabs in a temporary Firefox profile:
 11. Apply, then move a tracked tab. Confirm undo warns and only proceeds on the second click. Apply again and open only new tabs, then confirm undo proceeds without a warning.
 12. With a fresh profile, confirm the options page shows the defaults read-only and Apply uses them. Copy defaults, edit one rule, save, and confirm defaults no longer apply. Copy one default group back in, then cancel and confirm a revert before accepting one.
 13. Add a **Don't include** hostname to a title rule and confirm a matching tab on that host lands in the next matching group instead.
-14. Check the toolbar icon on a light and a dark theme.
+14. Mark a rule **Possible match only**. Confirm Apply and context auto-sort leave its matching tabs loose, and that right-clicking one lists the group under **Other possible groups** and moves it there.
+15. Check the toolbar icon on a light and a dark theme.
 
 ## Signing and distribution
 

@@ -23,10 +23,10 @@ test("round-trips a strict versioned rule config", () => {
     () => parseRuleConfig(JSON.stringify({ ...config, extra: true })),
     /unknown field extra/,
   );
-  assert.equal(config.version, 2);
+  assert.equal(config.version, 3);
   assert.throws(
-    () => parseRuleConfig(JSON.stringify({ ...config, version: 3 })),
-    /Unsupported rule config version 3/,
+    () => parseRuleConfig(JSON.stringify({ ...config, version: 4 })),
+    /Unsupported rule config version 4/,
   );
   assert.throws(
     () => parseRuleConfig(JSON.stringify({
@@ -61,6 +61,23 @@ test("imports version 1 configs and accepts exclusions only from version 2", () 
       rules: [{ ...rule, exclude: { typo: [] } }],
     })),
     /exclude has unknown field typo/,
+  );
+});
+
+test("accepts possible-match rules only from version 3", () => {
+  const possible = { ...rule, manualOnly: true };
+
+  assert.equal(
+    parseRuleConfig(JSON.stringify({ version: 2, rules: [rule] })).rules[0].manualOnly,
+    false,
+  );
+  assert.throws(
+    () => parseRuleConfig(JSON.stringify({ version: 2, rules: [possible] })),
+    /unknown field manualOnly/,
+  );
+  assert.equal(
+    parseRuleConfig(JSON.stringify({ version: 3, rules: [possible] })).rules[0].manualOnly,
+    true,
   );
 });
 
