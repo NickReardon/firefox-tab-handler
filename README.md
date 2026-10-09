@@ -33,6 +33,13 @@ A tab that matches an exclusion skips that rule and moves on to the next one,
 so a title rule for `unreal engine` can exclude `mail.google.com` and leave
 newsletters in the mail group.
 
+A rule marked **Possible match only** never sorts tabs automatically. It only
+offers its group in the tab context menu. Pair it with a normal rule of the
+same name to suggest extra sites for a group, such as a possible-match Gaming
+rule for `www.youtube.com` next to the normal Gaming rule for game stores.
+Possible-match names still count when the full plan merges groups that share a
+name.
+
 ### Default and custom rules
 
 The extension ships a default rule set covering communication, docs, AI,
@@ -51,10 +58,13 @@ confirmation.
 
 Right-click a tab, or a selection of tabs, for quick actions:
 
-- **Auto-sort into groups** groups the selected loose tabs by their first
-  matching rule.
-- **Move tab into X** moves the selected tabs that match rule X into that
-  group, including tabs from other groups.
+- **Auto-sort into X** groups the selected loose tabs by their first matching
+  rule. For a selection it shows the tab count and up to two group names.
+  Grouped tabs are never pulled out of their group by auto-sort.
+- **Other possible groups** lists every other group the selected tabs match,
+  normal rules first in rule order and then possible-match rules. **Move tab
+  into X** moves the matching tabs into that group, including tabs from other
+  groups. A group is left out when auto-sort already moves the same tabs there.
 - **Preview full plan** opens the popup.
 
 Context actions apply immediately because they touch only the selected tabs in
@@ -72,7 +82,8 @@ undo may revert those changes and asks for a second click to proceed.
 Rule configurations can be exported and imported from the options page. Import
 shows added, changed, and removed rules before replacing saved rules, and an
 import always creates or replaces your custom set. Exports use config version
-2, which adds exclusions. Version 1 files still import.
+3, which adds possible-match rules. Version 2 added exclusions. Version 1 and 2
+files still import.
 
 The popup exports a local tab inventory. Query strings and fragments are
 removed by default; including them requires the explicit full-URL checkbox.

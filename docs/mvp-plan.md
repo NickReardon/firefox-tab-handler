@@ -191,6 +191,20 @@ when any include matcher hits and no exclude matcher does, and an excluded tab
 falls through to the next rule. Exported configs are version 2. Import accepts
 version 1 and 2, and rejects `exclude` in a version 1 file.
 
+### Possible-match rules and config version 3
+
+A rule with `manualOnly: true` is a possible match. It is skipped by the full
+plan and by context auto-sort, and is offered only as a **Move tab into X**
+entry under **Other possible groups** in the tab context menu. Its name still
+counts when the full plan merges duplicate same-name groups. Explicit moves
+match a tab against every rule with the chosen group's name, so one menu entry
+covers same-name rules. Exported configs are version 3. Import accepts versions
+1 to 3, and rejects `manualOnly` before version 3.
+
+Decision: a per-rule flag instead of a separate possible-match matcher block.
+Same-name rules already share a group, so a possible-match rule beside a
+normal rule gives one group both automatic and suggested sites.
+
 ### Spike helpers removed
 
 The Milestone 1 mutation helpers and their console workflow were removed once

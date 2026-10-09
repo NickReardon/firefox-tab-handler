@@ -1,8 +1,9 @@
-import { matchesRule } from "./planner.js";
+import { matchesGroup, matchesRule, primaryRule } from "./planner.js";
 import { getRules } from "./rules.js";
 
 export const CONTEXT_FULL_PREVIEW_MENU_ID = "preview-full-plan";
 export const CONTEXT_AUTO_SORT_MENU_ID = "auto-sort-selected";
+export const CONTEXT_OTHER_GROUPS_MENU_ID = "other-possible-groups";
 export const CONTEXT_NO_MATCH_MENU_ID = "no-matching-rule";
 const FIRST_SEPARATOR_ID = "tab-organizer-separator-1";
 const SECOND_SEPARATOR_ID = "tab-organizer-separator-2";
@@ -38,6 +39,13 @@ export async function registerContextMenu(api) {
       contexts: ["tab"],
     },
     {
+      id: CONTEXT_OTHER_GROUPS_MENU_ID,
+      title: "Other possible groups",
+      contexts: ["tab"],
+      enabled: false,
+      visible: false,
+    },
+    {
       id: CONTEXT_NO_MATCH_MENU_ID,
       title: "No matching groups",
       contexts: ["tab"],
@@ -60,34 +68,22 @@ export async function refreshContextMenu(api, clickedTab) {
     return;
   }
 
-  const autoTabs = tabs.filter((tab) =>
-    !tab.pinned && tab.groupId === -1 &&
-    rules.some((rule) => matchesRule(rule, tab)),
-  );
-  const ruleMatches = rules
-    .map((rule) => ({
-      rule,
-      tabs: tabs.filter((tab) =>
-        !tab.pinned &&
-        groupNames.get(tab.groupId) !== rule.name &&
-        matchesRule(rule, tab),
-      ),
-    }))
-    .filter(({ tabs: matchingTabs }) => matchingTabs.length);
+  const autoTargets = autoSortTargets(tabs, rules);
+  const groupMatches = otherGroupMatches(tabs, rules, groupNames, autoTargets);
+  const autoNames = [...new Set(autoTargets.values())];
   const single = tabs.length === 1;
-  const firstMatch = single
-    ? rules.find((rule) => matchesRule(rule, autoTabs[0] ?? {}))
-    : undefined;
+  const showAuto = autoTargets.size > 0;
+  const showOthers = groupMatches.length > 0;
 
   await Promise.all([
     ...dynamicRuleMenuIds.map((id) => api.menus.remove(id).catch(() => {})),
-    api.menus.update(FIRST_SEPARATOR_ID, { visible: autoTabs.length > 0 }),
+    api.menus.update(FIRST_SEPARATOR_ID, { visible: showAuto }),
     api.menus.update(CONTEXT_AUTO_SORT_MENU_ID, {
-      title: single
-        ? `Auto-sort into ${firstMatch?.name ?? "group"}`
-        : "Auto-sort into groups",
-      visible: autoTabs.length > 0,
+      title: autoSortTitle(single, autoTargets.size, autoNames),
+      visible: showAuto,
     }),
+    api.menus.update(SECOND_SEPARATOR_ID, { visible: !showAuto || showOthers }),
+    api.menus.update(CONTEXT_OTHER_GROUPS_MENU_ID, { visible: showOthers }),
     api.menus.update(CONTEXT_NO_MATCH_MENU_ID, {
       title: single
         ? (tabs[0].pinned
@@ -96,7 +92,7 @@ export async function refreshContextMenu(api, clickedTab) {
             ? "No matching groups"
             : "No other matching groups")
         : "No matching groups for selected tabs",
-      visible: ruleMatches.length === 0,
+      visible: !showAuto && !showOthers,
     }),
   ]);
 
@@ -104,7 +100,7 @@ export async function refreshContextMenu(api, clickedTab) {
     return;
   }
 
-  dynamicRuleMenuIds = ruleMatches.map(({ rule, tabs: matchingTabs }) => {
+  dynamicRuleMenuIds = groupMatches.map(({ rule, tabs: matchingTabs }) => {
     const id = `${RULE_MENU_PREFIX}${rule.id}`;
     api.menus.create({
       id,
@@ -117,6 +113,65 @@ export async function refreshContextMenu(api, clickedTab) {
     return id;
   });
   await api.menus.refresh();
+}
+
+// Maps each loose, unpinned tab to the group name its primary rule sorts it
+// into. Grouped tabs stay where they are.
+function autoSortTargets(tabs, rules) {
+  const targets = new Map();
+  for (const tab of tabs) {
+    const rule = !tab.pinned && tab.groupId === -1 ? primaryRule(rules, tab) : undefined;
+    if (rule) {
+      targets.set(tab.id, rule.name);
+    }
+  }
+  return targets;
+}
+
+const AUTO_SORT_NAME_LIMIT = 2;
+
+function autoSortTitle(single, tabCount, names) {
+  if (single) {
+    return `Auto-sort into ${names[0] ?? "group"}`;
+  }
+
+  const shown = names.slice(0, AUTO_SORT_NAME_LIMIT).join(", ");
+  const hidden = names.length - AUTO_SORT_NAME_LIMIT;
+  return `Auto-sort ${tabCount} tab${tabCount === 1 ? "" : "s"} into ${shown}` +
+    (hidden > 0 ? ` +${hidden}` : "");
+}
+
+// Lists one entry per group name: normal rule matches in rule order, then
+// possible-match rules. A group is skipped when auto-sort already moves
+// exactly those tabs into it, and for tabs already in that group.
+function otherGroupMatches(tabs, rules, groupNames, autoTargets) {
+  const ordered = [
+    ...rules.filter((rule) => !rule.manualOnly),
+    ...rules.filter((rule) => rule.manualOnly),
+  ];
+  const seen = new Set();
+  const matches = [];
+
+  for (const rule of ordered) {
+    if (seen.has(rule.name)) {
+      continue;
+    }
+
+    const movable = (tab) => !tab.pinned && groupNames.get(tab.groupId) !== rule.name;
+    if (!tabs.some((tab) => movable(tab) && matchesRule(rule, tab))) {
+      continue;
+    }
+
+    seen.add(rule.name);
+    const matchingTabs = tabs.filter((tab) =>
+      movable(tab) && matchesGroup(rules, rule.name, tab));
+    if (matchingTabs.every((tab) => autoTargets.get(tab.id) === rule.name)) {
+      continue;
+    }
+    matches.push({ rule, tabs: matchingTabs });
+  }
+
+  return matches;
 }
 
 export function hideContextMenu() {
@@ -142,12 +197,12 @@ export async function handleContextMenuClick(api, info, clickedTab, applyScope) 
   const rule = ruleId === undefined
     ? undefined
     : rules.find((candidate) => candidate.id === ruleId);
-  const tabIds = tabs
-    .filter((tab) => !tab.pinned)
-    .filter((tab) => rule
-      ? groupNames.get(tab.groupId) !== rule.name && matchesRule(rule, tab)
-      : tab.groupId === -1 && rules.some((candidate) => matchesRule(candidate, tab)))
-    .map((tab) => tab.id);
+  const tabIds = rule
+    ? tabs
+      .filter((tab) => !tab.pinned && groupNames.get(tab.groupId) !== rule.name)
+      .filter((tab) => matchesGroup(rules, rule.name, tab))
+      .map((tab) => tab.id)
+    : [...autoSortTargets(tabs, rules).keys()];
 
   if (!tabIds.length) {
     return undefined;

@@ -51,6 +51,7 @@ function readRowsFrom(...rows) {
       urlIncludes: values(row.querySelector(".rule-exclude-urls")),
       titleIncludes: values(row.querySelector(".rule-exclude-titles")),
     },
+    manualOnly: row.querySelector(".rule-manual-only").checked,
   }));
 }
 
@@ -67,6 +68,7 @@ function render() {
     row.dataset.ruleId = rule.id;
     row.querySelector(".rule-name").value = rule.name;
     row.querySelector(".rule-color").value = rule.color;
+    row.querySelector(".rule-manual-only").checked = rule.manualOnly;
     row.querySelector(".rule-hostnames").value = rule.match.hostnames.join("\n");
     row.querySelector(".rule-urls").value = rule.match.urlIncludes.join("\n");
     row.querySelector(".rule-titles").value = rule.match.titleIncludes.join("\n");
@@ -240,6 +242,7 @@ document.querySelector("#add-rule").addEventListener("click", () => {
     color: "grey",
     match: { hostnames: [], urlIncludes: [], titleIncludes: [] },
     exclude: { hostnames: [], urlIncludes: [], titleIncludes: [] },
+    manualOnly: false,
   });
   render();
 });
