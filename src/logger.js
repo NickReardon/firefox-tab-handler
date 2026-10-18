@@ -1,5 +1,5 @@
 const DEBUG_KEY = "debugLogging";
-const PREFIX = "[Firefox Tab Organizer]";
+const PREFIX = "[Tab Organizer for Firefox]";
 
 export async function getDebugLogging(api) {
   const stored = await api.storage.local.get(DEBUG_KEY);

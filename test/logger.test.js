@@ -28,6 +28,6 @@ test("persists and gates structured debug logging", async () => {
   const enabledLog = await createDebugLogger(api, (...entry) => entries.push(entry));
   enabledLog("apply:start", { destinationWindowId: 1 });
   assert.equal(entries.length, 1);
-  assert.equal(entries[0][0], "[Firefox Tab Organizer] apply:start");
+  assert.equal(entries[0][0], "[Tab Organizer for Firefox] apply:start");
   assert.deepEqual(entries[0][1], { destinationWindowId: 1 });
 });

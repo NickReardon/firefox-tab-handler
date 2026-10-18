@@ -3,7 +3,7 @@
 ## Current boundary
 
 Version `0.2.0` is an unsigned development build. `pnpm run build` produces
-`web-ext-artifacts/firefox_tab_organizer-0.2.0.zip` for inspection and Mozilla
+`web-ext-artifacts/tab_organizer_for_firefox-0.2.0.zip` for inspection and Mozilla
 submission. Firefox Release and Beta require Mozilla-signed extensions for
 permanent installation. See Mozilla's [signing and distribution overview](https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/).
 
@@ -47,16 +47,42 @@ Use disposable test tabs in a temporary Firefox profile:
 13. Add a **Don't include** hostname to a title rule and confirm a matching tab on that host lands in the next matching group instead.
 14. Check the toolbar icon on a light and a dark theme.
 
-## Signing and distribution
+## Distribution model
+
+- GitHub is the public source repository and issue tracker.
+- AMO is the canonical installation and automatic-update channel.
+- The personal site should link to the AMO listing for installation and GitHub
+  for source code.
+- Ko-fi remains optional and external. Add its URL to AMO's Contributions URL
+  field and the personal-site project page after the account exists.
+- Do not embed payment processing, Ko-fi scripts, or recurring donation prompts
+  in the extension.
+
+The initial AMO copy is drafted in [amo-listing.md](amo-listing.md). The
+machine-readable first-submission fields are in `amo-metadata.json`.
+
+## Signing and publication
 
 Before the first signed release:
 
-1. Replace the placeholder Gecko ID with the intentional permanent extension ID. Do not change it after release.
+1. Confirm the permanent Gecko ID in `manifest.json`; do not change it after release.
 2. Confirm `manifest.json` has the intended version and that it exceeds any previously signed version.
-3. Choose and document the source license and distribution channel.
-4. Review Mozilla Add-on Policies and submit through AMO as listed or unlisted.
-5. Keep AMO API credentials outside the repository and command history.
-6. Distribute only the signed XPI returned by Mozilla, never the unsigned build ZIP.
+3. Review `amo-metadata.json`, [amo-listing.md](amo-listing.md), and Mozilla Add-on Policies.
+4. Add the final personal-site and Ko-fi URLs in the AMO developer hub.
+5. Submit as a listed extension through AMO.
+6. Keep AMO API credentials outside the repository and command history.
+7. Link GitHub and the personal site to the AMO listing. Do not distribute the unsigned build ZIP.
 
-Signing is deliberately not automated until the permanent ID, license, and
-listed-versus-unlisted channel are chosen.
+After setting `WEB_EXT_API_KEY` and `WEB_EXT_API_SECRET` in the local
+environment, the listed submission command is:
+
+```text
+pnpm exec web-ext sign --source-dir src --artifacts-dir web-ext-artifacts --channel listed --amo-metadata amo-metadata.json
+```
+
+Running this command uploads the extension to AMO. It is not part of the local
+release gate.
+
+The chosen source license is MPL-2.0. The permanent Gecko ID is
+`{09ea8249-4dc3-496c-bbb4-951fd83f1da6}`. AMO's listed channel is the intended
+public release path.

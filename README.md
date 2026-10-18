@@ -1,10 +1,15 @@
-# Firefox Tab Organizer
+# Tab Organizer for Firefox
 
 A Firefox-first extension for safely consolidating normal browser windows and organizing loose tabs into native tab groups.
 
 The extension plans changes before applying them. It preserves pinned tabs and existing groups by default, works locally, and does not inspect page contents.
 
 See [the MVP plan](docs/mvp-plan.md) for scope and acceptance criteria.
+
+Source code and issue tracking are hosted on
+[GitHub](https://github.com/NickReardon/firefox-tab-handler). Public releases
+will be installed through Firefox Add-ons so Mozilla signing and automatic
+updates remain authoritative.
 
 ## Install for development
 
@@ -95,3 +100,7 @@ Tab titles and URLs remain inside Firefox unless the user explicitly downloads
 a tab inventory. Inventory URLs omit credentials, query strings, and fragments
 by default. The full-URL checkbox includes query strings and fragments, but
 credentials remain removed.
+
+## License
+
+Tab Organizer for Firefox is licensed under the [Mozilla Public License 2.0](LICENSE).

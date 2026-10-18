@@ -173,4 +173,4 @@ if (browser.menus) {
   browser.menus.onHidden.addListener(hideContextMenu);
 }
 
-console.info("Firefox Tab Organizer ready.");
+console.info("Tab Organizer for Firefox ready.");

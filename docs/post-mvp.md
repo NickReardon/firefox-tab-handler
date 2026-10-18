@@ -20,7 +20,8 @@ Do not add an LLM API until the deterministic organizer is trusted in daily use.
 ## Release baseline
 
 The MVP has a repeatable local release gate and documented privacy, manual
-acceptance, signing, and distribution boundaries. Mozilla signing remains
-blocked on deliberate choices for the permanent Gecko ID ([#4](https://github.com/NickReardon/firefox-tab-handler/issues/4)), source license
-([#5](https://github.com/NickReardon/firefox-tab-handler/issues/5)), and listed-versus-unlisted channel ([#6](https://github.com/NickReardon/firefox-tab-handler/issues/6)). The first signed release is
-tracked in [#9](https://github.com/NickReardon/firefox-tab-handler/issues/9).
+acceptance, signing, and distribution boundaries. Public distribution uses a
+listed AMO release, GitHub for source and issues, and a personal site linking to
+both. The project uses MPL-2.0 and a permanent UUID-based Gecko ID.
+The first signed release remains tracked in
+[#9](https://github.com/NickReardon/firefox-tab-handler/issues/9).

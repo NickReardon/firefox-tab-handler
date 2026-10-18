@@ -1,6 +1,13 @@
 {
   "name": "firefox-tab-organizer",
   "private": true,
+  "license": "MPL-2.0",
+  "homepage": "https://github.com/NickReardon/firefox-tab-handler",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NickReardon/firefox-tab-handler.git"
+  },
+  "bugs": "https://github.com/NickReardon/firefox-tab-handler/issues",
   "type": "module",
   "packageManager": "pnpm@11.19.0",
   "scripts": {
