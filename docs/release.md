@@ -86,3 +86,14 @@ release gate.
 The chosen source license is MPL-2.0. The permanent Gecko ID is
 `{09ea8249-4dc3-496c-bbb4-951fd83f1da6}`. AMO's listed channel is the intended
 public release path.
+
+The personal-site URL, Ko-fi page, and screenshots can be added after the
+initial submission. GitHub is the homepage and support link until then.
+
+## Moving from the development ID
+
+Changing the old `firefox-tab-organizer@example.invalid` ID to the permanent
+ID makes Firefox treat the release as a separate extension. Export custom
+rules before removing the development installation, then import them into the
+release. The undo snapshot and logging preference do not migrate. Disable the
+development extension before testing the release to avoid duplicate menus.

@@ -13,17 +13,23 @@ Preview, consolidate, and organize Firefox tabs into native groups using determi
 Tab Organizer for Firefox safely consolidates normal browser windows and
 organizes loose tabs into Firefox's native tab groups.
 
-- Preview every move before applying it.
+- Preview full-window organization before applying it.
 - Preserve pinned tabs and existing groups by default.
 - Sort with ordered rules that match hostnames, URL text, or title text.
+- Start with built-in rules, create your own set, and exclude unwanted matches.
 - Merge matching tabs and exact-name groups into an existing destination group.
 - Undo the most recent apply operation.
+- Sort selected tabs directly from the tab context menu.
 - Import and export rule configurations.
 - Export a sanitized tab inventory for building rules.
 - Enable detailed local logging without recording tab titles or URLs.
 
 All organization runs locally. The extension makes no network requests and
 does not inspect page contents.
+
+Context-menu actions apply immediately to the selected tabs. Undo restores the
+layout before the most recent action and asks for confirmation if tracked tabs
+have changed since then.
 
 ## Category
 
@@ -50,7 +56,10 @@ Suggested acceptance flow:
 1. Open multiple normal windows containing pinned, grouped, and loose tabs.
 2. Open the toolbar popup and inspect the preview.
 3. Apply the plan, then use Undo last apply.
-4. Open Edit rules to create, reorder, export, and import rules.
+4. Open Edit rules to inspect the built-in defaults. Copy them to create a
+   custom set, then edit, reorder, export, and import rules.
+5. Right-click a tab selection to auto-sort or move matching tabs into a rule
+   group. Confirm only selected tabs move, then undo the action.
 
 ## Assets and links still needed
 

@@ -2,6 +2,9 @@
   "summary": {
     "en-US": "Preview, consolidate, and organize Firefox tabs into native groups using deterministic local rules."
   },
+  "description": {
+    "en-US": "Consolidate normal browser windows and organize loose tabs into Firefox's native groups. Preview full-window organization before applying it, preserve pinned tabs and existing groups, and undo the most recent action.\n\nStart with built-in rules or create your own ordered rules for hostnames, URL text, and title text. Exclude unwanted matches, merge exact-name groups, and import or export your rules.\n\nRight-click selected tabs to auto-sort them or move matching tabs into a rule group. These context-menu actions apply immediately to the selection. Undo asks for confirmation if tracked tabs have changed since the last action.\n\nEverything runs locally. No accounts, payment, network requests, analytics, or page-content inspection. Tab inventory export is optional and removes credentials. Query strings and fragments are omitted unless explicitly enabled. Source code and support are available on GitHub."
+  },
   "categories": ["tabs"],
   "homepage": {
     "en-US": "https://github.com/NickReardon/firefox-tab-handler"
