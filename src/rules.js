@@ -119,8 +119,12 @@ export function validateRules(rules) {
       MATCHERS.map((key) => [key, stringList(rule.exclude?.[key], `${name} exclude ${key}`)]),
     );
 
+    if (rule.manualOnly !== undefined && typeof rule.manualOnly !== "boolean") {
+      throw new TypeError(`Rule ${name} possible match setting must be true or false.`);
+    }
+
     ids.add(id);
-    return { id, name, color: rule.color, match, exclude };
+    return { id, name, color: rule.color, match, exclude, manualOnly: rule.manualOnly ?? false };
   });
 }
 

@@ -40,7 +40,7 @@ export function planOrganization(snapshot, rules = [], { tabIds, ruleId } = {}) 
       }
 
       const selectedRuleMatch = selectedRule && !tab.pinned &&
-        matchesRule(selectedRule, tab);
+        matchesGroup(rules, selectedRule.name, tab);
 
       if (selectedRule && !selectedRuleMatch) {
         throw new Error(`Tab ${tab.id} no longer matches rule ${selectedRule.name}.`);
@@ -88,9 +88,8 @@ export function planOrganization(snapshot, rules = [], { tabIds, ruleId } = {}) 
         requiresMove: window.id !== destination.id,
         pinned: Boolean(tab.pinned),
       };
-      const rule = !tab.pinned && (selectedRule
-        ? (matchesRule(selectedRule, tab) ? selectedRule : undefined)
-        : rules.find((candidate) => matchesRule(candidate, tab)));
+      const rule = !tab.pinned &&
+        (selectedRuleMatch ? selectedRule : primaryRule(rules, tab));
 
       if (!rule) {
         plan.looseTabMoves.push(move);
@@ -170,6 +169,18 @@ export function planOrganization(snapshot, rules = [], { tabIds, ruleId } = {}) 
   }
 
   return plan;
+}
+
+// The first rule that may sort the tab automatically. Possible-match rules
+// (manualOnly) are skipped here and offered only in the tab context menu.
+export function primaryRule(rules, tab) {
+  return rules.find((rule) => !rule.manualOnly && matchesRule(rule, tab));
+}
+
+// Rules with the same name share one group, so a tab belongs in a group when
+// any rule with that name matches it, including possible-match rules.
+export function matchesGroup(rules, name, tab) {
+  return rules.some((rule) => rule.name === name && matchesRule(rule, tab));
 }
 
 // A rule matches when any include matcher hits and no exclude matcher does. An

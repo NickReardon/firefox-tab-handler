@@ -58,4 +58,8 @@ test("summarizes populated rule fields on one line", () => {
   assert.equal(summarizeRule({
     match: { hostnames: ["a", "b", "c", "d", "e"], urlIncludes: [], titleIncludes: [] },
   }), "Hosts: a, b, c, +2 more");
+  assert.equal(summarizeRule({
+    manualOnly: true,
+    match: { hostnames: ["www.youtube.com"], urlIncludes: [], titleIncludes: [] },
+  }), "Possible match · Hosts: www.youtube.com");
 });
