@@ -155,7 +155,7 @@ export async function applyOrganization(api, snapshot, plan) {
   return result;
 }
 
-export async function undoLastOrganization(api, { confirmed = false } = {}) {
+export async function undoLastOrganization(api) {
   const log = await createDebugLogger(api);
   const {
     [UNDO_KEY]: snapshot,
@@ -170,26 +170,21 @@ export async function undoLastOrganization(api, { confirmed = false } = {}) {
       restoredGroups: 0,
       unchangedTabs: 0,
       unchangedGroups: 0,
+      skippedTabs: 0,
       warnings: ["No undo is available."],
     };
   }
 
-  // A missing layout means apply failed partway, so undo runs as recovery without asking.
-  if (
-    !confirmed &&
-    appliedLayout &&
-    JSON.stringify(await captureLayout(api, snapshot)) !== JSON.stringify(appliedLayout)
-  ) {
-    log("undo:confirmation-required");
-    return {
-      needsConfirmation: true,
-      message: "Tabs changed since the last action. Undo may revert those changes.",
-    };
-  }
+  // A missing layout means apply failed partway, so undo restores every tab as recovery.
+  const changedIds = appliedLayout
+    ? changedTabIds(appliedLayout, await captureLayout(api, snapshot))
+    : new Set();
+  const isRestorable = (tab) => !changedIds.has(tab.id);
 
   log("undo:start", {
     originalWindowCount: snapshot.windows.length,
     originalTabCount: snapshot.windows.flatMap((window) => window.tabs).length,
+    skippedTabIds: [...changedIds],
   });
 
   const warnings = [];
@@ -206,6 +201,11 @@ export async function undoLastOrganization(api, { confirmed = false } = {}) {
   }
 
   for (const original of snapshot.windows) {
+    if (!original.tabs.some(isRestorable)) {
+      log("undo:window-skipped", { originalWindowId: original.id });
+      continue;
+    }
+
     try {
       await api.windows.get(original.id);
       windowIds.set(original.id, original.id);
@@ -237,8 +237,14 @@ export async function undoLastOrganization(api, { confirmed = false } = {}) {
 
   for (const original of restoreWindows) {
     const targetWindowId = windowIds.get(original.id);
+
+    if (targetWindowId === undefined) {
+      continue;
+    }
+
     const groups = new Map(original.groups.map((group) => [group.id, group]));
-    const groupIds = original.tabs
+    const restorableTabs = original.tabs.filter(isRestorable);
+    const groupIds = restorableTabs
       .filter((tab) => tab.groupId !== NO_GROUP)
       .map((tab) => tab.groupId)
       .filter((groupId, index, ids) => ids.indexOf(groupId) === index);
@@ -250,7 +256,7 @@ export async function undoLastOrganization(api, { confirmed = false } = {}) {
       if (!live) {
         const tabIds = [];
 
-        for (const expected of original.tabs.filter((tab) => tab.groupId === groupId)) {
+        for (const expected of restorableTabs.filter((tab) => tab.groupId === groupId)) {
           try {
             const tab = await api.tabs.get(expected.id);
 
@@ -306,7 +312,7 @@ export async function undoLastOrganization(api, { confirmed = false } = {}) {
       );
       const missingMemberIds = [];
 
-      for (const expected of original.tabs.filter((tab) => tab.groupId === groupId)) {
+      for (const expected of restorableTabs.filter((tab) => tab.groupId === groupId)) {
         try {
           const tab = await api.tabs.get(expected.id);
 
@@ -373,12 +379,19 @@ export async function undoLastOrganization(api, { confirmed = false } = {}) {
 
   for (const original of restoreWindows) {
     const targetWindowId = windowIds.get(original.id);
+
+    if (targetWindowId === undefined) {
+      continue;
+    }
+
     const desiredTabs = [
       ...original.tabs.filter((tab) => tab.pinned),
       ...original.tabs.filter((tab) => !tab.pinned),
     ];
     const desiredIndexes = new Map(desiredTabs.map((tab, index) => [tab.id, index]));
-    const looseTabs = desiredTabs.filter((tab) => tab.groupId === NO_GROUP);
+    const looseTabs = desiredTabs.filter(
+      (tab) => tab.groupId === NO_GROUP && isRestorable(tab),
+    );
 
     for (const expected of looseTabs) {
       let live;
@@ -429,7 +442,8 @@ export async function undoLastOrganization(api, { confirmed = false } = {}) {
 
     const activeTab = original.tabs.find((tab) => tab.active);
 
-    if (activeTab) {
+    // A changed active tab stays where the user put it, so it must not take focus.
+    if (activeTab && isRestorable(activeTab)) {
       try {
         await api.tabs.update(activeTab.id, { active: true });
       } catch {
@@ -477,6 +491,7 @@ export async function undoLastOrganization(api, { confirmed = false } = {}) {
     restoredGroups,
     unchangedTabs,
     unchangedGroups,
+    skippedTabs: changedIds.size,
     warnings,
   };
   log("undo:complete", result);
@@ -488,22 +503,35 @@ export async function hasUndoSnapshot(api) {
   return Boolean(snapshot);
 }
 
-// Records window, group, pin state, and relative order of the snapshot's tabs.
-// Tabs opened later are ignored, so new tabs alone do not require confirmation.
+// Records window, group, and pin state of the snapshot's tabs. Tabs opened
+// later are not tracked, so undo leaves them alone.
 async function captureLayout(api, snapshot) {
   const trackedIds = new Set(snapshot.windows.flatMap((window) => window.tabs.map((tab) => tab.id)));
-  const liveTabs = (await api.tabs.query({}))
-    .filter((tab) => trackedIds.has(tab.id))
-    .sort((a, b) => a.windowId - b.windowId || a.index - b.index);
-
-  const liveIds = new Set(liveTabs.map((tab) => tab.id));
 
   return {
-    missingTabIds: [...trackedIds]
-      .filter((id) => !liveIds.has(id))
-      .sort((a, b) => a - b),
-    tabs: liveTabs.map((tab) => [tab.id, tab.windowId, tab.groupId, Boolean(tab.pinned)]),
+    tabs: (await api.tabs.query({}))
+      .filter((tab) => trackedIds.has(tab.id))
+      .map((tab) => [tab.id, tab.windowId, tab.groupId, Boolean(tab.pinned)]),
   };
+}
+
+// Returns tabs the user changed after apply: moved to another window or group,
+// pinned or unpinned, or closed. Undo skips them so it never reverts those changes.
+// Order is ignored because one drag shifts every later index, which would also
+// flag untouched tabs. Ceiling: a reorder within the same window and group is
+// reverted by undo. Upgrade path: compare each tab's preceding tracked neighbor.
+function changedTabIds(appliedLayout, liveLayout) {
+  const liveEntries = new Map(liveLayout.tabs.map((entry) => [entry[0], entry]));
+  const changed = new Set();
+
+  for (const applied of appliedLayout.tabs) {
+    const live = liveEntries.get(applied[0]);
+
+    if (!live || live.some((value, index) => value !== applied[index])) {
+      changed.add(applied[0]);
+    }
+  }
+  return changed;
 }
 
 function movedSourceWindowIds(plan) {

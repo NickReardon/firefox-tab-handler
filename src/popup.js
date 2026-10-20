@@ -152,13 +152,9 @@ async function loadPreview() {
       }
     });
 
-    let undoConfirmed = false;
-
     applyButton.addEventListener("click", async () => {
       applyButton.disabled = true;
       undoButton.disabled = true;
-      undoConfirmed = false;
-      undoButton.textContent = "Undo last apply";
       result.textContent = "Applying plan...";
 
       try {
@@ -183,26 +179,14 @@ async function loadPreview() {
       result.textContent = "Restoring the previous layout...";
 
       try {
-        const undone = await browser.runtime.sendMessage({
-          type: "planner:undo",
-          confirmed: undoConfirmed,
-        });
-
-        // Popups cannot use window.confirm, so the second click confirms.
-        if (undone.needsConfirmation) {
-          undoConfirmed = true;
-          undoButton.textContent = "Undo anyway";
-          undoButton.disabled = false;
-          applyButton.disabled = false;
-          result.setAttribute("role", "alert");
-          result.textContent = undone.message;
-          return;
-        }
-
+        const undone = await browser.runtime.sendMessage({ type: "planner:undo" });
+        const skippedText = undone.skippedTabs
+          ? ` Skipped ${undone.skippedTabs} tabs you changed since.`
+          : "";
         const warningText = undone.warnings.length
           ? ` ${undone.warnings.join(" ")}`
           : "";
-        result.textContent = `Undo restored ${undone.restoredGroups} groups and ${undone.restoredTabs} loose tabs.${warningText}`;
+        result.textContent = `Undo restored ${undone.restoredGroups} groups and ${undone.restoredTabs} loose tabs.${skippedText}${warningText}`;
       } catch (error) {
         result.setAttribute("role", "alert");
         result.textContent = `Undo failed: ${error.message}`;

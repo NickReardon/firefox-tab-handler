@@ -42,7 +42,7 @@ Use disposable test tabs in a temporary Firefox profile:
 8. Enable full URLs and confirm query strings and fragments appear while credentials remain absent.
 9. Enable detailed logging and confirm logs contain stages, IDs, and counts but no titles or URLs.
 10. Right-click one tab and a multi-tab selection. Confirm auto-sort and per-rule moves affect only the selected tabs, and that undo reverts them.
-11. Apply, then move a tracked tab. Confirm undo warns and only proceeds on the second click. Apply again and open only new tabs, then confirm undo proceeds without a warning.
+11. Apply across two windows, then move one tracked tab to another group and pin another. Undo and confirm both stay where you put them, the popup reports 2 skipped tabs, and the remaining tabs return to their source windows. Apply again, move every tab from one source window elsewhere, and confirm undo does not reopen that window.
 12. With a fresh profile, confirm the options page shows the defaults read-only and Apply uses them. Copy defaults, edit one rule, save, and confirm defaults no longer apply. Copy one default group back in, then cancel and confirm a revert before accepting one.
 13. Add a **Don't include** hostname to a title rule and confirm a matching tab on that host lands in the next matching group instead.
 14. Check the toolbar icon on a light and a dark theme.
